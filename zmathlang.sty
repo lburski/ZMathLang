@@ -1,0 +1,123 @@
+\ProvidesPackage{zmathlang}
+
+%Packages needed for this style file
+\usepackage[most]{tcolorbox}
+\usepackage{tikz}
+\usepackage{varwidth}
+\usepackage{zed}
+\usepackage{xcolor}
+
+%Defining the grey which would shadow out the specification but make it still visible
+\definecolor{Gray}{HTML}{A0A0A0}
+\definecolor{Black}{HTML}{000000}
+\definecolor{White}{HTML}{FFFFFF}
+\definecolor{expression}{HTML}{0FD016}
+\definecolor{set}{HTML}{FF5050}
+\definecolor{term}{HTML}{3A9FF1}
+\definecolor{declaration}{HTML}{808080}
+\definecolor{specification}{HTML}{FFE6CF}
+\definecolor{text}{HTML}{C5C5C5}
+\definecolor{typex}{HTML}{E4AF00}
+\definecolor{boxcolor}{HTML}{000000}
+\definecolor{defin}{HTML}{9999FF}
+
+
+
+
+%Creating boxes to go around the schema's for the DRa
+
+\newcommand\draschema[2]{%
+\begin{tcolorbox}[colback=white, enhanced, overlay, remember as=#1, finish={\node[] at (frame.north) {
+\LARGE
+\bfseries
+\colorbox{Black}{\color{White}#1}};}]
+{\color{Gray}\begin{varwidth}
+{\dimexpr\linewidth-2\fboxsep}#2\end{varwidth}}
+\end{tcolorbox}
+}
+
+\newcommand\draline[2]{%
+\begin{tcolorbox}[colback=white, enhanced, overlay, remember as=#1, finish={\node[] at (frame.north) {
+\LARGE
+\bfseries
+\colorbox{Black}{\color{White}#1}};}]
+{\color{Gray}\begin{varwidth}
+{\dimexpr\linewidth-2\fboxsep}{$#2$}\end{varwidth}}
+\end{tcolorbox}
+}
+
+
+\newcommand\dratheory[3]{%
+\begin{tcolorbox}[colback=white, enhanced, overlay, remember as=#1, scale=#2, finish={\node[] at (frame.north) {
+\LARGE
+\bfseries
+\colorbox{Black}{\color{White}#1}};}]
+{\color{Gray}\begin{varwidth}
+{\dimexpr\linewidth-2\fboxsep}#3\end{varwidth}}
+\end{tcolorbox}
+}
+
+%Creates the arrows (relationships) between the instances
+\newcommand\initialof[2]{
+\begin{tikzpicture}[overlay,remember picture,line width=1mm,draw=black!75!black]
+\draw[->] (#1.west) to[bend left] node[left, Black] {\LARGE{initialOf}} (#2.west);
+\end{tikzpicture}
+}
+
+\newcommand\uses[2]{
+\begin{tikzpicture}[overlay,remember picture,line width=1mm,draw=black!75!black, bend angle=90]
+\draw[->] (#1.east) to[bend right] node[right, Black] {\LARGE{uses}} (#2.east);
+\end{tikzpicture}
+}
+
+\newcommand\totalises[2]{
+\begin{tikzpicture}[overlay,remember picture,line width=1mm,draw=black!75!black, bend angle=90]
+\draw[->] (#1.west)  to[bend left] node[left, Black] {\LARGE{totalises}} (#2.west);
+\end{tikzpicture}
+}
+
+\newcommand\requires[2]{
+\begin{tikzpicture}[overlay,remember picture,line width=1mm,draw=black!75!black]
+\draw[->] (#1.east) to[bend right] node[above, Black] {\LARGE{requires}} (#2.east);
+\end{tikzpicture}
+}
+
+\newcommand\allows[2]{
+\begin{tikzpicture}[overlay,remember picture,line width=1mm,draw=black!75!black]
+\draw[->] (#1.west) to[bend right] node[left, Black] {\LARGE{allows}} (#2.west);
+\end{tikzpicture}
+}
+
+
+%Creating coloured boxes for ZCGa weak types
+\newcommand\expression[1]{
+\fcolorbox{Black}{expression}{$#1$}
+}
+
+\newcommand\term[1]{
+\fcolorbox{Black}{term}{$#1$}
+}
+
+\newcommand\declaration[1]{
+\fcolorbox{Black}{declaration}{$#1$}
+}
+
+\renewcommand\set[1]{
+\fcolorbox{Black}{set}{$#1$}
+}
+
+\renewcommand\text[1]{
+\fcolorbox{Black}{text}{$#1$}
+}
+
+\newcommand\specification[1]{
+\fcolorbox{Black}{specification}{#1}
+}
+
+
+\newcommand\definition[1]{
+\fcolorbox{Black}{defin}{$#1$}
+}
+
+
+\endinput

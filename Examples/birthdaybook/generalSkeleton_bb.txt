@@ -1,0 +1,46 @@
+stateSchema SS1 
+
+stateInvarients SI1 
+
+outputSchema OS1 
+
+initialSchema IS1 
+
+precondition PRE2 
+
+postcondition PO2 
+
+outputSchema OS3 
+
+output O3 
+
+outputSchema OS2 
+
+output O2 
+
+outputSchema OS5 
+
+precondition PRE4 
+
+outputSchema OS4 
+
+precondition PRE3 
+
+totaliseSchema TS2 
+
+totaliseSchema TS3 
+
+changeSchema CS1 
+
+precondition PRE1 
+
+output O5 
+
+output O4 
+
+output O1 
+
+totaliseSchema TS1 
+
+postcondition PO3 
+

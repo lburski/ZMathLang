@@ -1,0 +1,72 @@
+\documentclass{article}
+\usepackage{zcga}
+
+\begin{document}
+\specification{
+\begin{zed}
+\text{\declaration{\term{price}: \expression{\nat}}}
+\end{zed}
+
+\begin{schema}{VMSTATE}
+\text{\declaration{\term{stock}, \term{takings}: \expression{\nat}}}
+\end{schema}
+
+\begin{schema}{VM\_operation}
+\text{\Delta VMSTATE} \\
+\text{\declaration{\term{cash\_tendered?}, \term{cash\_refunded!}: \expression{\nat}} \\
+\declaration{\term{bars\_delivered!}: \expression{\nat}}}
+\end{schema}
+
+\begin{schema}{exact\_cash}
+\declaration{\term{cash\_tendered?}: \expression{\nat}}
+\where
+\expression{\term{cash\_tendered?} = \term{price}}
+\end{schema}
+
+\begin{schema}{insufficient\_cash}
+\declaration{\term{cash\_tendered?}: \expression{\nat}}
+\where
+\expression{\term{cash\_tendered?} < \term{price}}
+\end{schema}
+
+\begin{schema}{some\_stock}
+\declaration{\term{stock}: \expression{\nat}}
+\where
+\expression{\term{stock} > \term{0}}
+\end{schema}
+}
+
+\specification{
+
+\begin{schema}{VM\_sale}
+\text{VM\_operation}
+\where
+\expression{\term{stock'} = \term{\term{stock} - \term{1}}} \\
+\expression{\term{bars\_delivered!} = \term{1}} \\
+\expression{\term{cash\_refunded!} = \term{\term{cash\_tendered?} - \term{price}}} \\
+\expression{\term{takings'} = \term{\term{takings} + \term{price}}}
+\end{schema}
+
+\begin{schema}{VM\_nosale}
+\text{VM\_operation}
+\where
+\expression{\term{stock'} = \term{stock}} \\
+\expression{\term{bars\_delivered!} = \term{0}} \\
+\expression{\term{cash\_refunded!} = \term{cash\_tendered?}}\\
+\expression{\term{takings'} = \term{takings}}
+\end{schema}
+
+\begin{zed}
+VM1 \defs exact\_cash \land some\_stock \land VM\_sale
+\end{zed}
+
+\begin{zed}
+VM2 \defs insufficient\_cash \land VM\_nosale
+\end{zed}
+
+\begin{zed}
+VM3 \defs VM1 \lor VM2
+\end{zed}
+}
+
+\end{document}
