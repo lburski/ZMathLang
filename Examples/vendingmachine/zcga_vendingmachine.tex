@@ -2,7 +2,7 @@
 \usepackage{zcga}
 
 \begin{document}
-\specification{
+
 \begin{zed}
 \text{\declaration{\term{price}: \expression{\nat}}}
 \end{zed}
@@ -34,9 +34,7 @@
 \where
 \expression{\term{stock} > \term{0}}
 \end{schema}
-}
 
-\specification{
 
 \begin{schema}{VM\_sale}
 \text{VM\_operation}
@@ -57,16 +55,16 @@
 \end{schema}
 
 \begin{zed}
-VM1 \defs exact\_cash \land some\_stock \land VM\_sale
+VM1 \defs \text{\expression{\text{exact\_cash} \land \text{some\_stock} \land \text{VM\_sale}}}
 \end{zed}
 
 \begin{zed}
-VM2 \defs insufficient\_cash \land VM\_nosale
+VM2 \defs \text{\expression{\text{insufficient\_cash} \land \text{VM\_nosale}}}
 \end{zed}
 
 \begin{zed}
-VM3 \defs VM1 \lor VM2
+VM3 \defs \text{\expression{\text{VM1} \lor \text{VM2}}}
 \end{zed}
-}
+
 
 \end{document}

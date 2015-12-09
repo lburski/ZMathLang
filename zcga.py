@@ -136,7 +136,6 @@ def term_declaration(specification):
         if termdeclaration:
             if termdeclaration.group(1) not in gamma:
                 gamma.append(termdeclaration.group(1))
-    print dvar
                 
                 
 
