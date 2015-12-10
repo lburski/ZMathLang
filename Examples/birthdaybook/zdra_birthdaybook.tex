@@ -9,8 +9,6 @@
 \begin{zed}
    [NAME, ~ DATE] 
 \end{zed}
-\label{constants}
-
 
 \draschema{SS1}{
 \begin{schema}{BirthdayBook}
@@ -65,18 +63,6 @@ BirthdayBook~'
 \uses{OS1}{SS1}
 \requires{OS1}{PRE2}
 
-\draschema{OS2}{
-\begin{schema}{Remind}
-    \Xi BirthdayBook \\
-    today?: DATE \\
-    cards!: \power NAME
-\where
-    \draline{O2}{cards! = \{ n: known | birthday(n) = today? \}}
-\end{schema}
-}
-
-\requires{OS2}{O2}
-\uses{OS2}{SS1}
 
 
 \begin{zed} 
@@ -84,65 +70,61 @@ BirthdayBook~'
 \end{zed}
 
 
-\draschema{OS3}{
+\draschema{OS2}{
 \begin{schema}{Success}
     result!: REPORT
 \where
-    \draline{O3}{result! = ok}
+    \draline{O2}{result! = ok}
 \end{schema}
 }
 
-\requires{OS3}{O3}
-\uses{OS3}{SS1}
+\requires{OS2}{O2}
+\uses{OS2}{SS1}
 
-\draschema{OS4}{
+\draschema{OS3}{
 \begin{schema}{AlreadyKnown}
     \Xi BirthdayBook \\
     name?: NAME \\
     result!: REPORT
 \where
     \draline{PRE3}{name? \in known} \\
-    \draline{O4}{result! = already\_known}
+    \draline{O3}{result! = already\_known}
 \end{schema}
 }
 
-\requires{OS4}{PRE3}
-\allows{PRE3}{O4}
-\uses{OS4}{SS1}
+\requires{OS3}{PRE3}
+\allows{PRE3}{O3}
+\uses{OS3}{SS1}
 
-\draschema{OS5}{
+\draschema{OS4}{
 \begin{schema}{NotKnown}
     \Xi BirthdayBook \\
     name?: NAME \\
     result!: REPORT
 \where
     \draline{PRE4}{name? \notin known} \\
-    \draline{O5}{result! = not\_known}
+    \draline{O4}{result! = not\_known}
 \end{schema}
 }
 
-\requires{OS5}{PRE4}
-\allows{PRE4}{O5}
-\uses{OS5}{SS1}
+\requires{OS4}{PRE4}
+\allows{PRE4}{O4}
+\uses{OS4}{SS1}
 
 
 \begin{zed} 
-    \draline{TS1}{RAddBirthday ==\\ (AddBirthday \land Success)\\  \lor AlreadyKnown} \\
-   \draline{TS2}{RFindBirthday ==\\ (FindBirthday \land Success) \lor NotKnown} \\
-    \draline{TS3}{RRemind == Remind \land Success}
+    \draline{TS1}{\text{RAddBirthday} == \text{\expression{(\text{AddBirthday} \land \text{Success})\\  \lor \text{AlreadyKnown}}}} \\
+   \draline{TS2}{\text{RFindBirthday} ==\\ \text{\expression(\text{FindBirthday} \land \text{Success}) \lor \text{NotKnown}}} \\
 \end{zed}
 
 \totalises{TS1}{CS1}
+\totalises{TS1}{OS2}
 \totalises{TS1}{OS3}
-\totalises{TS1}{OS4}
 \totalises{TS2}{OS1}
-\totalises{TS2}{OS3}
-\totalises{TS2}{OS5}
-\totalises{TS3}{OS2}
-\totalises{TS3}{OS3}
+\totalises{TS2}{OS2}
+\totalises{TS2}{OS4}
 }
 
-\end{center}
 
 
 \end{document}

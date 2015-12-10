@@ -2,9 +2,7 @@
 \usepackage{zmathlang}
 
 \begin{document}
-
-
-\dratheory{T1}{0.5}{
+\dratheory{T1}{0.4}{
 \begin{zed}
 \text{\declaration{\term{price}:\expression{\nat}}}
 \end{zed}
@@ -96,43 +94,6 @@ VM3 \defs \text{\expression{\text{VM1} \lor \text{VM2}}}
 \end{zed}}
 \totalises{TS3}{TS1}
 \totalises{TS3}{TS2}
-
 }
-
-
-\begin{tabular}{|l|}
-\hline
-\textbf{Assigned rhetorical roles}\\
-\hline
-(T1, hasRhetoricalRole, theory) \\
-(SS1, hasRhetoricalRole, stateschema) \\
-(CS0, hasRhetoricalRole, changeschema) \\
-(CS1, hasRhetoricalRole, changeschema) \\
-(CS2, hasRhetoricalRole, changeschema) \\
-(PRE1, hasRhetoricalRole, precondition) \\
-(PRE2, hasRhetoricalRole, precondition) \\
-(PRE3, hasRhetoricalRole, precondition) \\
-(PO1, hasRhetoricalRole, postcondition) \\
-(PO2, hasRhetoricalRole, postcondition) \\
-(TS1, hasRhetoricalRole, totalise) \\
-(TS2, hasRhetoricalRole, totalise) \\
-(TS3, hasRhetoricalRole, totalise) \\
-\hline
-\hline
-\textbf{Relations}\\
-\hline
-(CS0, uses, SS1)\\
-(CS1, uses, CS0)\\
-(CS2, uses, CS)\\
-(PRE1, allows, PO1)\\
-(PRE3, allows, PO1)\\
-(PRE2, allows, PO2)\\
-TS1, totalises, PRE1 \\
-TS2, totalises, PRE2 \\
-TS1, totalises, PRE3 \\
-TS3, totalises, TS1 \\
-TS3, totalises, TS2 \\
-\hline
-\end{tabular}
 
 \end{document}

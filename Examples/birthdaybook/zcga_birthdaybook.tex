@@ -1,5 +1,5 @@
 \documentclass{article}
-\usepackage{zmathlang}
+\usepackage{zcga}
 
 \begin{document}
 
@@ -46,14 +46,6 @@
     \expression{\term{date!} = \term{\set{birthday}(\term{name?})}}}
 \end{schema}
 
-\begin{schema}{Remind}
-	\text{\Xi BirthdayBook} \\
-	\text{\declaration{\term{today?}: \expression{DATE}} \\
-\declaration{\set{cards!}: \expression{\power NAME}}}\\
-\where
-	\text{\expression{\set{cards!} = \set{\{\declaration{\term{n}: \expression{known}} | \expression{\term{\set{birthday}		(\term{n})} = \term{today?}}\}}}}
-\end{schema}
-
 
 \begin{zed} 
     \set{REPORT} ::= \term{ok} | \term{already\_known} | \term{not\_known}
@@ -87,9 +79,8 @@
 \end{schema}
 
 \begin{zed} 
-    RAddBirthday ==\\ (AddBirthday \land Success)\\  \lor AlreadyKnown \\
-    RFindBirthday ==\\ (FindBirthday \land Success) \lor NotKnown \\
-    RRemind == Remind \land Success
+    \text{RAddBirthday} ==\\ \text{\expression{(\text{AddBirthday} \land \text{Success})\\  \lor \text{AlreadyKnown}}} \\
+    \text{RFindBirthday} ==\\ \text{\expression{(\text{FindBirthday} \land \text{Success}) \lor \text{NotKnown}}} \\
 \end{zed}
 
 \end{document}
