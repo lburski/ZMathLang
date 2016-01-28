@@ -277,7 +277,7 @@ def createskeleton_set():
         elif "CS" in eachpart:
             orderofgraph[indexofnode] = (eachpart, "changeSchema")
         elif "TS" in eachpart:
-            orderofgraph[indexofnode] = (eachpart, "totaliseSchema")
+            orderofgraph[indexofnode] = (eachpart, "lemma")
         elif "SI" in eachpart:
             orderofgraph[indexofnode] = (eachpart, "stateInvarients")
         elif "A" in eachpart:
@@ -311,5 +311,9 @@ def findskeleton(somestring):
     return newname
 
 #somedoc= ("/home/lb89/workspace/zdra/curries/zml_clubstate.tex")
+#somedoc ="fullexample.tex"
 #totalcheck(somedoc)
+#createplot(somedoc)
+#creatdepgraphplot(somedoc)
+#print(someset)
 #print createskeleton_set()

@@ -1,0 +1,99 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+\dratheory{T1}{0.4}{
+\begin{zed}
+\text{\declaration{\term{price}:\expression{\nat}}}
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{VMSTATE}
+\text{\declaration{\term{stock}, \term{takings}: \expression{\nat}}}
+\end{schema}}
+
+\draschema{CS0}{
+\begin{schema}{VM\_operation}
+\text{\Delta VMSTATE} \\
+\text{\declaration{\term{cash\_tendered?}, \term{cash\_refunded!}: \expression{\nat}}} \\
+\text{\declaration{\term{bars\_delivered!} : \expression{\nat}}}
+\end{schema}}
+
+\uses{CS0}{SS1}
+
+\draschema{PRE1}{
+\begin{schema}{exact\_cash}
+\text{\declaration{\term{cash\_tendered?}: \expression{\nat}}}
+\where
+\text{\expression{\term{cash\_tendered?} = \term{price}}}
+\end{schema}}
+
+\draschema{PRE2}{
+\begin{schema}{insufficient\_cash}
+\text{\declaration{\term{cash\_tendered?} : \expression{\nat}}}
+\where
+\text{\expression{\term{cash\_tendered?} < \term{price}}}
+\end{schema}}
+
+\draschema{PRE3}{
+\begin{schema}{some\_stock}
+\text{\declaration{\term{stock}: \expression{\nat}}}
+\where
+\text{\expression{\term{stock} > \term{0}}}
+\end{schema}}
+
+
+\draschema{CS1}{
+\begin{schema}{VM\_sale}
+\text{VM\_operation}
+\where
+\draline{PO1}{
+\text{\expression{\term{stock'} = \term{\term{stock} - \term{1}}}} \\
+\text{\expression{\term{bars\_delivered!} = \term{1}}} \\
+\text{\expression{\term{cash\_refunded!} = term{\term{cash\_tendered?} - \term{price}}}} \\
+\text{\expression{\term{takings'} = \term{\term{takings} + \term{price}}}}}
+\end{schema}}
+
+
+\uses{CS1}{CS0}
+\requires{CS1}{PO1}
+
+\draschema{CS2}{
+\begin{schema}{VM\_nosale}
+\text{VM\_operation}
+\where
+\draline{PO2}{\text{\expression{\term{stock'} = \term{stock}}} \\
+\text{\expression{\term{bars\_delivered!} = \term{0}}} \\
+\text{\expression{\term{cash\_refunded!} = \term{cash\_tendered?}}}\\
+\text{\expression{\term{takings'} = \term{takings}}}}
+\end{schema}}
+
+\uses{CS2}{CS0}
+\requires{CS2}{PO2}
+
+\draschema{TS1}{
+\begin{zed}
+VM1 \defs \text{\expression{\text{exact\_cash} \land \text{some\_stock} \land \text{VM\_sale}}}
+\end{zed}}
+
+\uses{TS1}{PRE1}
+\uses{TS1}{PRE3}
+\uses{TS1}{CS1}
+
+\draschema{TS2}{
+\begin{zed}
+VM2 \defs \text{\expression{\text{insufficient\_cash} \land \text{VM\_nosale}}}
+\end{zed}}
+
+\uses{TS2}{PRE2}
+\uses{TS2}{CS2}
+
+\draschema{TS3}{
+\begin{zed}
+VM3 \defs \text{\expression{\text{VM1} \lor \text{VM2}}}
+\end{zed}}
+\totalises{TS3}{TS1}
+\totalises{TS3}{TS2}
+}
+
+\end{document}

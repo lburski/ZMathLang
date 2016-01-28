@@ -6,7 +6,22 @@ This program uses the Z-CGa rules from MathLang to check a latex Z specification
 '''
   
 import re
-
+global someset
+global errorSet
+global Vt_set
+global Vs_set
+global dvar
+global gamma
+global constant_sets
+global constant_terms
+global correct_sets
+global definitions
+global preface_constants
+global defined_constants
+global correct_preface_set_constants
+global spec
+someset = []
+errorSet=[]
 declaredtypes = ["\\nat", "\\nat_1", 'power', 'pfun', '\\num']
 Vs_set = []
 Vt_set = []
@@ -17,17 +32,22 @@ constant_terms = []
 correct_sets = ["\{ \}"]
 correct_terms = []
 definitions = []
-preface_constants = ["\\cup", "\\cap", "\\dom", "\\ran", "=", "\\subseteq", "\\mapsto",
+preface_constants = ["\\cup", "\\cap", "\\dom", "\\ran", "=", "\\subseteq", "\\mapsto","\\iseq"
 "\\emptyset", "\\plus", "\\notin", "\\in", "\\#", "\\neq", "\\implies", "\semi",
 "\\limg", "\\rimg", "\\rres", "\\leq", "\\vert" ]
 defined_constants = []
 correct_preface_set_constants = []
+global no_of_errors
 no_of_errors = 0
 spec = []
+
+#def emptysomset():
+    #return someset
 
 #finds all the set variables in the specification both declared and not declared
 # this gives us the set V^(S) as shown in the rules
 def vs_set(specification):
+    global Vs_set
     for a in specification:
         var_set = re.findall(r"\\set{([!?A-Za-z\']*)}", a)
         type_set = re.findall(r"\\set{([A-Z]+)}", a)
@@ -40,6 +60,8 @@ def vs_set(specification):
 #finds all the term variables in the specification both declared and not declared
 # this gives us the set V^(T) as shown in the rules
 def vt_set(specification):
+    global Vt_set
+    #Vt_set=[]
     for a in specification:
         var_term = re.findall(r"\\term{([!?A-Za-z\']*)}", a)
         if var_term:
@@ -54,7 +76,7 @@ def emptyspecification(specification):
     for a in specification:
         emptyspecification = checkbit.search(a)
         if emptyspecification:
-            print("Empty Specification")
+            someset.append("Empty Specification\n")
             spec.append("")
             return True    
 
@@ -65,7 +87,7 @@ def emptytext(specification):
     for a in specification:
         emptytext = checkbit.search(a)
         if emptytext:
-            print("Empty Text")
+            someset.append("Empty Text\n")
             gamma.append("")
             return True
 
@@ -74,6 +96,7 @@ def emptytext(specification):
 #$\leq$ \term{\set{stockLevel}~\term{t}}}}}        
 def binders(specification):
     global no_of_errors
+    global errorSet
     binder_constants = ["$\\forall$"]
     bindercomp = re.compile(r"\\expression{((\$\\[a-z]+\$)[ ]*\\declaration{(.*)}[ ]*\$\@\$[ ]*\\expression{(.*)})")
     for eachline in specification:
@@ -90,7 +113,8 @@ def binders(specification):
                         gamma.append(a)
 #Here we check that b is in the set of defined binders B
             if cons_b not in binder_constants:
-                print cons_b + " not in binder constants"
+                errorSet.append(cons_b)
+                someset.append(str(cons_b) + " not in binder constants\n")
                 no_of_errors = no_of_errors + 1
 #Since the ext_constant_expression function checks all labeled \expression, we know that the
 #expression within the binder is correct.
@@ -103,11 +127,11 @@ def gammacorrect(specification):
     if emptyspecification(specification) or not emptyspecification(specification):
         return True
 
-#Looks at the declarations, add's the set's which are declared into dvar and adds the correct
+#Looks at the declarations, adds the sets which are declared into dvar and adds the correct
 #declarations into gamma        
 def set_declaration(specification):
     for a in specification:
-        setdec = re.findall(r"(\\declaration{\\set{(.*)}[ ]*:[ ]*\\expression{.*}})", a)
+        setdec = re.findall(r"(\\declaration{[ ]*\\set{(.*)}[ ]*:[ ]*\\expression{.*}})", a)
         if setdec:
             for a, b in setdec:
                 if b not in dvar:
@@ -122,7 +146,7 @@ def set_declaration(specification):
 def term_declaration(specification):
     termdeclarationcomp = re.compile(r"(\\declaration{[ ]*\\term{([!\?A-Za-z]*)}[ ]*:[ ]*\\expression{.*}})")
     for a in specification:
-        termdec = re.findall(r"(\\declaration{\\term{(.*)}[ ]*:[ ]*\\expression{.*?}})", a)
+        termdec = re.findall(r"(\\declaration{[ ]*\\term{(.*)}[ ]*:[ ]*\\expression{.*?}})", a)
         if termdec:
             termdecinterm = re.findall(r"\\term{(.*?)}", a)
             if termdecinterm:
@@ -157,6 +181,8 @@ def int_cons_term(specification):
 #if not it prints out a list of all the set variables found which are not declared            
 def variable_set(specification):
     global no_of_errors
+    global errorSet
+    global dvar
     nondeclared = []
     vs_set(open(specification, "r"))
     set_declaration(open(specification, "r"))
@@ -173,12 +199,16 @@ def variable_set(specification):
                 correct_sets.append(a)
                 correct_sets.append(a + "'")
     if nondeclared:
-        print nondeclared, " non declared sets"
+        for n in nondeclared:
+            errorSet.append(n)
+        someset.append(str(nondeclared)+ " non declared sets \n")
+        
     return correct_sets
 #For every term variable found in the specification, it checks if it is in the declared variables 
 #if not it prints out a list of all the term variables found which are not declared
 def variable_term(specification):
     global no_of_errors
+    global errorSet
     nondeclared = []
     vt_set(open(specification, "r"))
     term_declaration(open(specification, "r"))
@@ -192,12 +222,15 @@ def variable_term(specification):
             if a not in correct_terms:
                 correct_terms.append(a)
     if nondeclared:
-        print nondeclared, " non declared terms"
+        for n in nondeclared:
+            errorSet.append(n)
+        someset.append(str(nondeclared)+" non declared terms\n")
     return correct_terms
 
 #Sometimes brackets are put around variables so we they should be allowed as well
 def bracket_variables(specification):
     global no_of_errors
+    global errorSet
     nondeclared = []
     for line in specification:
         bra_var = re.findall("\(([\!\?a-zA-Z]+)\)", line)
@@ -210,13 +243,16 @@ def bracket_variables(specification):
                 if eachvar not in dvar:
                     dvar.append(eachvar)
     if nondeclared:
-        print nondeclared, " not declared terms"
+        for n in nondeclared:
+            errorSet.append(n)
+        someset.append(str(nondeclared)+ " not declared terms\n")
     return dvar
         
 
 #This function finds all the defined internal constants within a specification
 #it checks that only defined types are used within declarations.
 def internalconstant(specification):
+    global declaredtypes
     global no_of_errors
     nondeclaredtypes = []
     declaredtypecomp = re.compile(r"\[\\set\{([A-Z]*)\}\]")
@@ -253,7 +289,7 @@ def internalconstant(specification):
         if declaredsettype:
             declaredtypes.append(declaredsettype.group(1))
             
-#This checks if the types used in declarations are defined before hand
+#This checks if the types used in declarations are defined beforehand
         if setdeclaration1:
             typeused = fixbrackets(setdeclaration1.group(1))
             if typeused not in declaredtypes:
@@ -264,10 +300,12 @@ def internalconstant(specification):
                 if madetype3:
                     for correct_set, cons, var in madetype3:
                         if cons not in preface_constants:
-                            print cons + " constant not in preface"
+                            errorSet.append(cons)
+                            someset.append( str(cons) + " constant not in preface")
                             no_of_errors = no_of_errors + 1
                         elif var not in correct_sets:
-                            print var + " variable not declared"
+                            errorSet.append(var)
+                            someset.append(str(var) + " variable not declared")
                             no_of_errors = no_of_errors + 1
                         else:
                             correct_sets.append(correct_set)
@@ -295,7 +333,9 @@ def internalconstant(specification):
                     nondeclaredtypes.append(typeused)
                     no_of_errors = no_of_errors + 1   
     if nondeclaredtypes:
-        print nondeclaredtypes, "types not declared"
+        for n in nondeclaredtypes:
+            errorSet.append(n)
+        someset.append(str(nondeclaredtypes)+ " types not declared\n")
     return declaredtypes
 
 #sometimes when i find a set in a line there is not enough paranthesis because when i search for
@@ -458,15 +498,18 @@ def fixbrackets(someword):
 #The externaltospec function comapres each constant and makes sure it is not already defined.
 #This rule is used in the ext-cons rule of the Z-CGa
 def externaltospec(a, b):
+    global errorSet
     for each_constant in a:
         if each_constant in b:
-            print each_constant + " constant already in spec"
+            errorSet.append(each_constant)
+            someset.append(str(each_constant) + " constant already in spec\n")
         else:
             return True
         
 #This function checks the definitions of the specification
 def definition(specification):
     global no_of_errors
+    global errorSet
     non_declared_variables = []
 #We make sure that a set is declared after the let
     defintiontypecomp = re.compile(r"\\definition{\(?\$\\LET\$ *\\set\{([a-z]+)}")
@@ -496,13 +539,16 @@ def definition(specification):
                     defined_constants.append(defcon)
                     definitions.append(line)
     if non_declared_variables:
-        print non_declared_variables, " non declared sets"
+        for n in nondeclared_variables:
+            errorSet.append(n)
+        someset.append( str(non_declared_variables)+ " non declared sets\n")
     return definitions
 
 #The ext_constant_expression makes sure all the constants used in expressions have been defined
 #in the preface
 def ext_constant_expression(specification):
     global no_of_errors
+    global errorSet
     notinpreface = []
     correct_expressions = []
     ext_constant_term(open(checking, "r"))
@@ -533,7 +579,8 @@ def ext_constant_expression(specification):
                         for a in x:
                             a = fixpanthesis(a)
                             if a not in correct_sets:
-                                print a +  " - not a correct set"
+                                errorSet.append(a)
+                                someset.append(str(a) +  " - not a correct set\n")
                                 no_of_errors = no_of_errors + 1
                             else:
 #before we append expressions to correct expressions we check if c external to spec
@@ -569,14 +616,17 @@ def ext_constant_expression(specification):
                     if newx:
                         for eachset in newx:
                             if eachset not in correct_sets:
-                                print eachset + " not a correct set"
+                                errorSet.append(eachset)
+                                someset.append(str(eachset) + " not a correct set\n")
                                 no_of_errors = no_of_errors + 1
                     else:
-                        print newset + " not a correct set"
+                        errorSet.append(newset)
+                        someset.append(str(newset) + " not a correct set\n")
                         no_of_errors = no_of_errors + 1
             for cons in z:
                 if cons not in preface_constants:
                     if cons not in notinpreface:
+                        errorSet.append(cons)
                         notinpreface.append(cons)
                     no_of_errors = no_of_errors + 1
                 else:
@@ -585,15 +635,25 @@ def ext_constant_expression(specification):
         if tt:
             for a,b,c in tt:
                 if a not in correct_terms:
-                    print a + " not a correct term"
-                    no_of_errors = no_of_errors + 1
+                    findtermsinterms = re.findall(r"\\term{(.*?)}", a)
+                    if findtermsinterms:
+                        for eachterms in findtermsinterms:
+                            if eachterms not in correct_terms:
+                                errorSet.append(a)
+                                someset.append(str(a) + " not a correct term\n")
+                                no_of_errors = no_of_errors + 1
+                    else:
+                        errorSet.append(a)
+                        someset.append(str(a) + " not a correct term\n")
+                        no_of_errors = no_of_errors + 1
                 if c not in correct_terms:
                     c = fixbrackets(c)
                     if c not in correct_terms:
                         d = re.findall(r"\\term{([a-zA-Z\_\?\!\\]+)}", c)
                         for eachterm in d:
                             if eachterm not in correct_terms:
-                                print c + " not a correct term"
+                                errorSet.append(c)
+                                someset.append(str(c) + " not a correct term\n")
                                 no_of_errors = no_of_errors + 1
                 if b not in preface_constants:
                     if b not in notinpreface:
@@ -602,13 +662,10 @@ def ext_constant_expression(specification):
                 else:
                     correct_expressions.append(line)
     if notinpreface:
-        print notinpreface, "constants not in preface"
+        errorSet.append(notinpreface)
+        someset.append(str(notinpreface)+ "constants not in preface")
     return correct_expressions
-
-       
-                
-
-
+      
 #The assumption function adds all correct expressions to the context, gamma.                
 def assumption(specification):
     for each_expression in ext_constant_expression(specification):
@@ -627,25 +684,105 @@ def doall(someinput):
     assumption(open(someinput, "r"))
     spec_ext(open(someinput, "r"))
     binders(open(someinput, "r"))
+    schemaNames((open(someinput, "r")))
 
 #Calls do all on the input, counts the amount of errors, if not errors then prints spec is correct
-#and gamma, if there are errors then spec is incorrect
+#and gamma, if there are errors then spec is incorrect    
 def specCorrect(something):
     global no_of_errors
+    global errorSet
+    global someset
+    global checking
+    checking=something
+    cleanValues()
     doall(something)
     if no_of_errors == 0:
-        print "Spec Grammatically Correct"
+        someset.append( "Spec Grammatically Correct\n")
         #print "spec = ", spec
     else:
-        print "Spec Grammatically Incorrect"
-        print "Number of errors ", no_of_errors
+        someset.append("Spec Grammatically Incorrect\n")
+        someset.append("Number of errors "+ str(no_of_errors))
+    
+#Sets the initial values of the variables,
+#making sure that everything's been cleaned when the function is run again.                
+def cleanValues():
+    global no_of_errors
+    global someset
+    global errorSet
+    global checking
+    global Vt_set
+    global Vs_set
+    global dvar
+    global declaredtypes
+    global gamma
+    global constant_sets
+    global constant_terms
+    global correct_sets
+    global definitions
+    global preface_constants
+    global defined_constants
+    global correct_preface_set_constants
+    global spec
+    no_of_errors=0
+    someset=[]
+    errorSet=[]
+    Vt_set=[]
+    Vs_set=[]              
+    dvar=[]
+    declaredtypes = ["\\nat", "\\nat_1", 'power', 'pfun', '\\num']
+    gamma = []
+    constant_sets = []
+    constant_terms = []
+    correct_sets = ["\{ \}"]
+    correct_terms = []
+    definitions = []
+    preface_constants = ["\\cup", "\\cap", "\\dom", "\\ran", "=", "\\subseteq", "\\mapsto",
+    "\\emptyset", "\\plus", "\\notin", "\\in", "\\#", "\\neq", "\\implies", "\semi","\\iseq"
+    "\\limg", "\\rimg", "\\rres", "\\leq", "\\vert" ]
+    defined_constants = []
+    correct_preface_set_constants = []
+    spec = []
+    
+          
+#check schemaNamesdef emptyspecification(specification):
+def schemaNames(specification):
+    global no_of_errors
+    global errorSet
+    setNames = []
+    declaredschemaName = r"\\begin\{schema\}\{(.+)\}"
+    namesInText = r"\\text\{((\\Delta|\\Xi)?[ ]*([\_\\a-zA-Z0-9]+))[ ]*\}"
+    checkName = re.compile(declaredschemaName)
+    checkNameInText = re.compile(namesInText)
+    for a in specification:
+        declaredSname = checkName.search(a)
+        nameInText = checkNameInText.search(a)
+#Adds all schemaNames into a list
+        if declaredSname:
+            setNames.append(declaredSname.group(1))
+#Adds the prime schema to the defined schemas
+            setNames.append(declaredSname.group(1) + "'")
+#Checks if all called schemas in schematext are actual defined schemas
+        if nameInText:
+            calledName = nameInText.group(3)
+            if calledName not in setNames:
+                no_of_errors = no_of_errors + 1
+                errorSet.append(calledName)
+                someset.append(str(calledName) + " not a defined Schemas\n")
+            else:
+                gamma.append(nameInText.group(1))
+def printoutput():
+    outputmessage = " ".join(someset)
+    return outputmessage
+    
+def errors():
+    global errorSet
+    return errorSet
+
+     
 
 
-
-checking = raw_input("Please type the specification which you would like to check: ")
-#checking = "zcga_member.tex"
-specCorrect(checking)
-
-
+#checking = raw_input("Please type the specification which you would like to check: ")
+#checking = "zcga_vendingmachine.tex"
+#specCorrect(checking)
 
 

@@ -426,7 +426,7 @@ def createIsaskel(somename):
                 isa_ps.write("\n")
                 if a not in printedinisaskel:
                     printedinisaskel.append(a)
-        if b == "totaliseSchema" and a not in printedinisaskel:
+        if b == "lemma" and a not in printedinisaskel:
             if outputsPre(a):
                 isa_ps.write("lemma " + a + ": \n")
                 isa_ps.write("\"("+ outputsPre(a) + ")\"\n" )
@@ -494,6 +494,7 @@ class fillIn:
     newtpleset = []
     
     def cleanstring(self, somestring):
+        somestring = self.bindersyntax(somestring)
         if "\{" in somestring:
             somestring = re.sub('\\\{', ' openSet ', somestring)
         if "\}" in somestring:
@@ -530,14 +531,16 @@ class fillIn:
             somestring = re.sub('empty', '{}', somestring)
         if "cup" in somestring:
             somestring = re.sub('cup', '\<union>', somestring)
+        if "cap" in somestring:
+            somestring = re.sub('cap', '\<inter>', somestring)
         if "neq" in somestring:
             somestring = re.sub('neq', '\<noteq>', somestring)
         if " inv" in somestring:
             somestring = re.sub(' inv', '^-1', somestring)
         if "cat" in somestring:
             somestring = re.sub('cat', 'concat', somestring)
-       # if "@" in somestring:
-        #    somestring = re.sub('@', '\\\\<bullet>', somestring)
+        if "@" in somestring:
+            somestring = re.sub('@', '\<bullet>', somestring)
         if "limg" in somestring:
             somestring = re.sub('limg', '\<lparr>', somestring)
         if "rimg" in somestring:
@@ -560,12 +563,16 @@ class fillIn:
             somestring = re.sub('rhd', '\<rhd>', somestring)
         if "nrres" in somestring:
             somestring = re.sub('nrres', '\<unlhd>', somestring)
+        if "rres" in somestring:
+            somestring = re.sub('rres', '\<unrhd>', somestring)
         if "forall" in somestring:
             somestring = re.sub('forall ', '\<forall>', somestring)
         if "exists" in somestring:
             somestring = re.sub('exists ', '\<exists>', somestring)
         if "implies" in somestring:
             somestring = re.sub('implies', '\<longrightarrow>', somestring)
+        if "iff" in somestring:
+            somestring = re.sub('iff', '\<Longleftrightarrow>', somestring)
         if " notin " in somestring:
             somestring = re.sub('notin', '\<notin>', somestring)
         elif " in " in somestring:
@@ -584,15 +591,18 @@ class fillIn:
             somestring = re.sub('=', ' = ', somestring)
         if "~" in somestring:
             somestring = re.sub('~', ' ', somestring)
+        if "  " in somestring:
+            somestring = re.sub('  ', ' ', somestring)
         somestring = self.isabelle_symbols(somestring)
-        somestring = self.bindersyntax(somestring)
         somestring = somestring.lstrip()
         return somestring
     
     def bindersyntax(self, somestring):
         if " @" in somestring:
             somestring = somestring.replace("@", "\<longrightarrow")
-        if ":" in somestring:
+        if "::" in somestring:
+            pass
+        elif ":" in somestring:
             somestring = somestring.replace(":", ".")
         if "," in somestring:
             somestring = somestring.replace(",", " ")
@@ -600,7 +610,7 @@ class fillIn:
     
     def isabelle_symbols(self,string):
         if "land" in string:
-            string = string.replace("land", "\<and>\n")
+            string = string.replace("land", "\\<and>\n")
         if "lor" in string:
             string = string.replace("lor", "\<or>\n")
         if "dom" in string:
@@ -610,9 +620,9 @@ class fillIn:
         if "minus" in string:
             string = string.replace("minus", "- ")
         if "langle " in string:
-            string = string.replace("langle ", "\<langle> ")
+            string = string.replace("langle ", "[")
         if "rangle " in string:
-            string = string.replace("rangle ", "\<rangle> ")
+            string = string.replace("rangle ", "]")
         elif "ran" in string:
             string = string.replace("ran", "Range")
         return string
@@ -633,6 +643,7 @@ class fillIn:
         for each in newtype:
             if each not in self.newtypes:
                 self.newtypes.append(each)
+                #print each
         if manytype:
             for allmanytypes in manytype:
                 if "|" not in allmanytypes:
@@ -648,9 +659,10 @@ class fillIn:
                                 self.newtypes.append(eachDef)    
         if datatype:
             for datatype_name, datatypebody, space in datatype:
-                newdatatype = "datatype "+datatype_name+ " = "+ self.cleanstring(datatypebody) + "\n"
+                newdatatype = "datatype "+datatype_name+ " = "+ self.cleanstring(datatypebody)
                 if newdatatype not in self.datatypes:
-                    self.datatypes.append(newdatatype)      
+                    self.datatypes.append(newdatatype) 
+                #print self.datatypes  
         labelledspec.close()
     
     def find_zcga_info(self, pathname):
@@ -659,7 +671,7 @@ class fillIn:
         decsToPrint = dict()
         labelspec = open(pathname, 'r')        
         multidefsend_comp = re.compile(r"\\draschema\{([a-zA-Z0-9]+)\}{([a-zA-Z0-9]+) *\\defs *\\text\{(.*)\}\}\}\}")
-        draschema_comp = re.compile(r"(\\draschema\{([A-Z0-9]+)\}\{(.|\n)\\begin\{schema\}\{([a-zA-z0-9\_]*)\}(.|\n)*?\\end\{schema\})")
+        draschema_comp = re.compile(r"(\\draschema\{([A-Z0-9]+)\}\{(.|\n)?\\begin\{schema\}\{([a-zA-z0-9\_]*)\}(.|\n)*?\\end\{schema\})")
         globedec_comp = re.compile(r"(\\begin\{zed\}(.|\n)*?\\end\{zed\})")
         axdef_comp = re.compile(r"(\\draschema\{([a-zA-Z0-9]+)\}\{((.|\n)*?)\\where((.|\n)*?)\\end\{axdef\})")
         postcondition_comp = re.compile(r"\\draline\{(PO[0-9]+)\}\{((.|\n)*?)(\\end\{schema\}|\\end\{zed\})")
@@ -843,6 +855,7 @@ class fillIn:
                     decs_types = []
                     for (abc, eachone) in text:
                         if abc == "\\Delta":
+                            #print self.state_variables
                             eachone = self.cleanstring(eachone)
                             for (zdra_name, act_name) in self.nodesNnames:
                                 if eachone == act_name:
@@ -856,10 +869,11 @@ class fillIn:
                                     if ((eachone.lower()+"'")) not in decs_vars:
                                         decs_vars.append((eachone.lower()+"'"))
                                     for (state_variables, state_types) in self.stateDeclarations:
+                                        #print self.stateDeclarations
                                         isabelleSyntax =  self.setSyntax(state_types)
-                                        if "set" in isabelleSyntax:
-                                            decs_vars.append(state_variables+ "'")
-                                            decs_types.append(isabelleSyntax)
+                                        #if "set" in isabelleSyntax:
+                                        decs_vars.append(state_variables+ "'")
+                                        decs_types.append(isabelleSyntax)
                                             
                         else:
                             eachone = self.cleanstring(eachone)
@@ -1008,23 +1022,24 @@ class fillIn:
                 for (sch_t, sch_v) in setofallvartypes:
                     sch_types.append(sch_t)
                     sch_vars.append(sch_v)
-                self.schemaVarTypes.append((defs_a, sch_types, sch_vars))
-                clean_defs_expression = self.cleanstring(defs_expresssion)
-                newNodeNames = self.reversTuples(self.nodesNnames)
-                dictOfNames = dict(newNodeNames)
-                new_expressions = self.replace_all(clean_defs_expression, dictOfNames)
-                namesWithVars = dict()
-                for d_name, d_type, d_var in self.schemaVarTypes:
-                    if d_name in new_expressions:
-                        namesWithVars[d_name] = d_name+ " " + " ".join(d_var)
-                finalExpression = self.replace_all_with_brackets(new_expressions, namesWithVars)
-                newsymbols = self.cleanstring(finalExpression)
-                self.expressionSet.append((defs_a, newsymbols))
+                if dexpression:
+                    self.schemaVarTypes.append((defs_a, sch_types, sch_vars))
+                    clean_defs_expression = self.cleanstring(defs_expresssion)
+                    newNodeNames = self.reversTuples(self.nodesNnames)
+                    dictOfNames = dict(newNodeNames)
+                    new_expressions = self.replace_all(clean_defs_expression, dictOfNames)
+                    namesWithVars = dict()
+                    for d_name, d_type, d_var in self.schemaVarTypes:
+                        if d_name in new_expressions:
+                            namesWithVars[d_name] = d_name+ " " + " ".join(d_var)
+                    finalExpression = self.replace_all_with_brackets(new_expressions, namesWithVars)
+                    newsymbols = self.cleanstring(finalExpression)
+                    self.expressionSet.append((defs_a, newsymbols))
         
 
         
         #Find all global declarations within the specification, and findall datatypes in specification   
-        elif globe_dec:
+        if globe_dec:
             for l, m in globe_dec:
                 decl = re.findall(dec_comp, l)
                 for eachdec in decl:
@@ -1041,12 +1056,15 @@ class fillIn:
                     if "beginzed" in l:
                         q = re.sub('beginzed', '', l)
                         s = re.sub('endzed', '', q)
-                        t = re.sub(':: ', '', s)
+                        t = re.sub('::', '', s)
                         u = re.sub('  ', ' ', t)
                         l = 'datatype ' +(re.sub('\n', '', u))
                         m = re.sub('  ', ' ', l)
-                    if l not in self.datatypes:
+                        m = m + '\n'
+
+                    if m not in self.datatypes:
                         self.datatypes.append(m)
+                        
 
 
 # findsall in double equals
@@ -1219,6 +1237,12 @@ class fillIn:
             string = "(" + string + ")" + " set"
         if "iseq" in string:
             string = string.replace("iseq", "")
+            string = string + " list"
+        elif "seq_1" in string:
+            string = string.replace("seq_1", "")
+            string = string + " list"
+        elif "seq" in string:
+            string = string.replace("seq", "")
             string = string + " list"
 
         return string
@@ -1415,20 +1439,37 @@ class fillIn:
     
 x = fillIn()
 
-#TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_clubstate.tex")
-#TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_clubstate.thy")
+#TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_clubstate2.tex")
+#TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_clubstate2.thy")
 
-#TheLabeledSpec= ("/home/jeff/lavinias_workspace/zdra/curries/zml_clubstate2.tex")
-#TheIsaSkel = ("/home/jeff/lavinias_workspace/zdra/curries/gpsazml_clubstate2.thy")
+TheLabeledSpec= ("/home/jeff/lavinias_workspace/zdra/fullexample.tex")
+TheIsaSkel = ("/home/jeff/lavinias_workspace/zdra/gpsafullexample.thy")
+
+#TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_videoshop.tex")
+#TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_videoshop.thy")
 
 ##########
-#Create IsaSkeleton to use without interface
+##Create IsaSkeleton to use without interface
 #zdracheck.totalcheck(TheLabeledSpec)
 #zdracheck.createskeleton_set()
 #createIsaskel(TheLabeledSpec)
-
 #########
-
+##Fills in the skeleton
 #x.fillinIsa(TheLabeledSpec, TheIsaSkel)
 #x.fillinIsa(TheLabeledSpec, TheIsaSkel)
 #x.fillNames(TheIsaSkel)
+##################
+
+
+def createSkeleton():
+    zdracheck.totalcheck(TheLabeledSpec)
+    zdracheck.createskeleton_set()
+    createIsaskel(TheLabeledSpec)
+
+def fillinskeleton():
+    x.fillinIsa(TheLabeledSpec, TheIsaSkel)
+    x.fillinIsa(TheLabeledSpec, TheIsaSkel)
+    x.fillNames(TheIsaSkel)
+    
+#createSkeleton()
+#fillinskeleton()
