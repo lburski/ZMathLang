@@ -1,0 +1,292 @@
+\begin{verbatim}
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T6}{0.1}{
+\begin{zed}
+[\set{PERSON}]
+\end{zed}
+
+\begin{zed}
+[\set{TOPIC}]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{ProjectAlloc}
+\text{\declaration{\set{studInterests}, \set{lecInterests}: \expression{PERSON \pfun\iseq TOPIC}}}\\
+\text{\declaration{\set{allocation}: \expression{PERSON \pfun PERSON}}}\\
+\text{\declaration{\set{maxPlaces}: \expression{PERSON \pfun \nat}}}
+\where
+\draline{SI1}{\text{\expression{\set{\set{\dom \set{studInterests}} \cap \set{\dom \set{lecInterests}}} = \set{\{\}}}}\\
+\text{\expression{\set{\dom \set{allocation}} \subseteq \set{\dom \set{studInterests}}}}\\
+\text{\expression{\set{\ran \set{allocation}} \subseteq \set{\dom \set{lecInterests}}}}\\
+\text{\expression{\set{\dom \set{maxPlaces}} = \set{\dom \set{lecInterests}}}}\\
+\text{\expression{\forall \declaration{\term{lec}: \expression{\dom maxPlaces}}\\
+@ \expression{\term{\# (\set{\set{allocation} \rres \set{\{\term{lec}\}}})} \leq \term{\set{maxPlaces}~\term{lec}}}}}}
+\end{schema}}
+
+\draschema{IS1}{
+\begin{schema}{InitProjectAlloc}
+\text{ProjectAlloc}
+\where
+\draline{PO1}{\text{\expression{\set{lecInterests'} = \set{\{\}}}}\\
+\text{\expression{\set{studInterests'} = \set{\{\}}}}}
+\end{schema}}
+
+\requires{IS1}{PO1}
+\uses{IS1}{SS1}
+
+\draschema{CS1}{
+\begin{schema}{AddStudent}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{ts?}: \expression{\iseq TOPIC}}}
+\where
+\draline{PRE1}{\text{\expression{\term{s?} \notin \set{\set{\dom \set{studInterests}} \cup \set{\dom \set{lecInterests}}}}}}\\
+\draline{PO2}{\text{\expression{\set{studInterests'} = \set{\set{studInterests} \cup \set{\{\term{\term{s?} \mapsto \term{ts?}}\}}}}}\\
+\text{\expression{\set{lecInterests'} = \set{lecInterests}}}\\
+\text{\expression{\set{allocation'} = \set{allocation}}}\\
+\text{\expression{\set{maxPlaces'} = \set{maxPlaces}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{AddLecturer}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{l?}: \expression{PERSON}}}\\
+\text{\declaration{\term{ts?}: \expression{\iseq TOPIC}}}\\
+\text{\declaration{\term{maxAlloc?} : \expression{\nat_1}}}
+\where
+\draline{PRE2}{\text{\expression{\term{l?} \notin \set{\set{\dom \set{studInterests}} \cup \set{\dom \set{lecInterests}}}}}}\\
+\draline{PO3}{\text{\expression{\set{lecInterests'} = \set{\set{lecInterests} \cup \set{\{\term{\term{l?} \mapsto \term{ts?}}\}}}}}\\
+\text{\expression{\set{maxPlaces'} = \set{\set{maxPlaces} \cup \set{\{\term{\term{l?} \mapsto \term{maxAlloc?}}\}}}}}\\
+\text{\expression{\set{studInterests'} = \set{studInterests}}}\\
+\text{\expression{\set{allocation'} = \set{allocation}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{Allocate}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{s?} : \expression{PERSON}}}
+\where
+\draline{PRE3}{\text{\expression{\term{s?} \in \set{\dom \set{studInterests}}}}\\
+\text{\expression{\term{s?} \notin \set{\dom \set{allocation}}}}}\\
+\draline{PO4}{\text{\expression{\exists \declaration{\term{sup}: \expression{\dom lecInterests}}; \declaration{\term{t}: \expression{TOPIC}}; \declaration{\term{i},\term{j}: \expression{\nat}}\\
+| \expression{\term{\set{maxPlaces}~\term{sup}} > \term{\#(\set{\set{allocation} \rres \set{\{\term{sup}\}}})}}\\
+\land \expression{\term{\term{i} \mapsto \term{t}} \in \set{\set{studInterests}~\term{s?}}}\\
+\land \expression{\term{\term{j} \mapsto \term{t}} \in \set{\set{lecInterests}~\term{sup}}}\\
+@ (\\
+\expression{\forall \declaration{\term{lec}: \expression{\dom lecInterests}}; \declaration{\term{k}: \expression{\nat}} |\\ \expression{\term{\set{maxPlaces}~\term{lec}} > \term{\# (\set{\set{allocation} \rres \set{\{\term{lec}\}}})}}\\
+@ (\\
+(\expression{\term{\term{k} \mapsto \term{t}} \in \set{\set{lecInterests}~\term{lec}}} \implies \expression{\term{k} \geq \term{j}})\\
+\land \\
+\expression{(\set{\set{\ran \set{(\set{1\upto i-1} \dres \set{\set{studInterests}~\term{s?}})}} \\
+\cap \set{\ran (\set{\set{lecInterests}~\term{lec}}})} = \set{\{\}}))}\\
+\land \\
+\expression{\set{allocation'} = \set{\set{allocation} \cup \set{\{\term{\term{s?} \mapsto \term{sup}}\}}}}\\
+)}}}\\
+\text{\expression{\set{studInterests'} = \set{studInterests}}}\\
+\text{\expression{\set{lecInterests'} = \set{lecInterests}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{CS4}{
+\begin{schema}{DeAllocate}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}
+\where
+\draline{PO5}{\text{\expression{\exists \declaration{\term{sup}: \expression{\dom lecInterests}}\\
+@ \expression{(\expression{\term{\term{s?} \mapsto \term{sup}} \in \expression{allocation}}\\
+\land \expression{\set{allocation'} = \set{\set{allocation} \setminus \set{\{\term{\term{s?} \mapsto \term{sup}}\}}})}}}}\\
+\text{\expression{\set{studInterests'} = \set{studInterests}}}\\
+\text{\expression{\set{lecInterests'} = \set{lecInterests}}}}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PO5}
+
+\draschema{CS5}{
+\begin{schema}{RemoveLecsTopic}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{l?}: \expression{PERSON}}}\\
+\text{\declaration{\term{t?}: \expression{TOPIC}}}
+\where
+\draline{PRE4}{\text{\expression{\term{l?} \in \set{\dom \set{lecInterests}}}}\\
+\text{\expression{\term{t?} \in \set{\ran (\set{\set{lecInterests}~\term{l?}})}}}}\\
+\draline{PO6}{\text{\expression{\set{lecInterests'} = \\
+ \set{\set{lecInterests} \oplus \\
+\set{\{\term{\term{l?} \mapsto \term{squash~(\set{\set{lecInterests}~\term{l?}} \nrres\set{\{\term{t?}\}})}}\}}}}}\\
+\text{\expression{\set{studInterests'} =\set{studInterests}}}\\
+\text{\expression{\set{allocation'}=\set{allocation}}}}
+\end{schema}}
+
+\uses{CS5}{IS1}
+\requires{CS5}{PRE4}
+\allows{PRE4}{PO6}
+
+\draschema{OS1}{
+\begin{schema}{LecsAvailable}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{t?}: \expression{TOPIC}}}\\
+\text{\declaration{\set{ps!}: \expression{\power PERSON}}}
+\where
+\draline{O1}{\text{\expression{\set{ps!} = \\
+\set{\{\declaration{\term{p}: \expression{\dom lecInterests}} | \expression{\term{t?} \in \set{\ran (\set{\set{lecInterests}~\term{p}})}}\\
+\land \expression{\term{\set{maxPlaces}~\term{p}} > \term{\# (\set{\set{allocation} \rres \set{\{\term{p}\}}})\}}}}}}}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{O1}
+
+\begin{zed}
+\set{MESSAGE}::= \term{success} | \term{isStudent} | \term{isLecturer} | \term{notStudent} | \term{isAllocated} \\ | \term{noLecAvailable} | \term{notAllocated} | \term{notLecturer} | \term{notListedTopic}
+\end{zed}
+
+\draschema{OS2}{
+\begin{zed}
+SuccessMessage \defs [\text{\declaration{\term{outcome!}: \expression{MESSAGE}}} |\draline{O2}{\text{\expression{\term{outcome!} = \term{success}}}}]
+\end{zed}}
+
+\draschema{OS3}{
+\begin{schema}{IsStudent}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE5}{\text{\expression{\term{s?} \in \set{\dom \set{studInterests}}}}}\\
+\draline{O3}{\text{\expression{\term{outcome!} = \term{isStudent}}}}
+\end{schema}}
+
+\uses{OS3}{SS1}
+\requires{OS3}{PRE5}
+\allows{PRE5}{O3}
+
+\draschema{OS4}{
+\begin{schema}{IsLecturer}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE6}{\text{\expression{\term{s?} \in \set{\dom \set{lecInterests}}}}}\\
+\draline{O4}{\text{\expression{\term{outcome!} = \term{isLecturer}}}}
+\end{schema}}
+
+\uses{OS4}{SS1}
+\requires{OS4}{PRE6}
+\allows{PRE6}{O4}
+
+\draschema{OS5}{
+\begin{schema}{NotStudent}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE7}{\text{\expression{\term{s?} \notin \set{\dom \set{studInterests}}}}}\\
+\draline{O5}{\text{\expression{\term{outcome!} = \term{notStudent}}}}
+\end{schema}}
+
+\uses{OS5}{SS1}
+\requires{OS5}{PRE7}
+\allows{PRE7}{O5}
+
+\draschema{OS6}{
+\begin{schema}{IsAllocated}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE8}{\text{\expression{\term{s?} \notin \set{\dom \set{allocation}}}}}\\
+\draline{O6}{\text{\expression{\term{outcome!} = \term{isAllocated}}}}
+\end{schema}}
+
+\uses{OS6}{SS1}
+\requires{OS6}{PRE8}
+\allows{PRE8}{O6}
+
+\draschema{OS7}{
+\begin{schema}{NoLecsAvailable}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{O7}{
+\text{\expression{\neg (\exists \declaration{\term{sup}:\expression{\dom lecInterests}} @ \\
+\expression{\term{\set{maxPlaces}~\term{sup}} > \term{\# (\set{\set{allocation} \rres \set{\{\term{sup}\}}})}}\\
+\land \\
+\expression{\set{\set{\ran (\set{\set{studInterests}~\term{s?}})} \cap \set{\ran (\set{\set{lecInterests}~\term{sup}})}} \neq \set{\{\}})}}}\\
+\text{\expression{\term{outcome!}=\term{noLecAvailable}}}}
+\end{schema}}
+
+\uses{OS7}{SS1}
+\requires{OS7}{O7}
+
+\draschema{OS8}{
+\begin{schema}{NotAllocated}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE9}{\text{\expression{\term{s?} \notin \set{\dom \set{allocation}}}}}\\
+\draline{O8}{\text{\expression{\term{outcome!}=\term{notAllocated}}}}
+\end{schema}}
+
+\uses{OS8}{SS1}
+\requires{OS8}{PRE9}
+\allows{PRE9}{O8}
+
+\draschema{OS9}{
+\begin{schema}{NoLecturer}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{l?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE10}{\text{\expression{\term{l?} \notin \set{\dom \set{lecInterests}}}}}\\
+\draline{O9}{\text{\expression{\term{outcome!} = \term{notLecturer}}}}
+\end{schema}}
+
+\uses{OS9}{SS1}
+\requires{OS9}{PRE10}
+\allows{PRE10}{O9}
+
+\draschema{OS10}{
+\begin{schema}{NotListedTopic}
+\text{\Xi ProjectAlloc}\\
+\text{\declaration{\term{l?}: \expression{PERSON}}}\\
+\text{\declaration{\term{t?}: \expression{TOPIC}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE11}{\text{\expression{\term{t?} \notin \set{\ran (\set{\set{lecInterests}~\term{l?}})}}}}\\
+\draline{O10}{\text{\term{outcome!} = \term{notListedTopic}}}
+\end{schema}}
+
+\uses{OS10}{SS1}
+\requires{OS10}{PRE11}
+\allows{PRE11}{O10}
+
+\draschema{OS11}{
+\begin{schema}{SupsDiffer}
+\text{\Delta ProjectAlloc}\\
+\text{\declaration{\term{s?}: \expression{PERSON}}}
+\where
+\draline{O11}{\text{\expression{\exists \declaration{\term{old}, \term{new}: \expression{\dom lecInterests}}\\
+@ \expression{(\expression{\term{\term{s?} \mapsto \term{old}} \in \set{allocation}} \land \\
+\expression{\term{\term{s?} \mapsto \term{new}} \in \set{allocation'}} \land \\
+\expression{\term{old} \neq \term{new}})}}}}
+\end{schema}
+}
+\uses{OS11}{SS1}
+\requires{OS11}{O11}
+}
+\end{document}
+\end{verbatim}

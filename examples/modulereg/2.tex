@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T1}{0.5}{
+\begin{zed}
+[PERSON, MODULE]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{ModuleReg}
+students: \power PERSON\\
+degModules: \power MODULE\\
+taking: PERSON \rel MODULE
+\where
+\draline{SI1}{\dom taking \subseteq students\\
+\ran taking \subseteq degModules}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{CS1}{
+\begin{schema}{AddStudent}
+\Delta ModuleReg\\
+p?: PERSON \\
+\where
+\draline{PRE1}{p? \notin students}\\
+\draline{PO1}{students' = students \cup \{p?\} \\
+degModules' = degModules\\
+taking' = taking}
+\end{schema}}
+
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO1}
+\uses{CS1}{SS1}
+
+\draschema{CS2}{
+\begin{schema}{RegForModule}
+\Delta ModuleReg \\
+p?: PERSON \\
+m?: MODULE
+\where
+\draline{PRE2}{p? \in students \\
+m? \in degModules \\
+p? \mapsto m?\notin taking} \\
+\draline{PO2}{taking' = taking \cup \{p? \mapsto m?\} \\
+students' = students \\
+degModules' = degModules}
+\end{schema}}
+
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO2}
+\uses{CS2}{SS1}
+}
+\end{document}

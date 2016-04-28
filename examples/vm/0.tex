@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{zed}
+\begin{document}
+\begin{zed}
+price:\nat
+\end{zed}
+\begin{schema}{VMSTATE}
+stock, takings: \nat
+\end{schema}
+\begin{schema}{VM\_operation}
+\Delta VMSTATE \\
+cash\_tendered?, cash\_refunded!: \nat \\
+bars\_delivered! : \nat
+\end{schema}
+\begin{schema}{exact\_cash}
+cash\_tendered?: \nat
+\where
+cash\_tendered? = price
+\end{schema}
+\begin{schema}{insufficient\_cash}
+cash\_tendered? : \nat
+\where
+cash\_tendered? < price
+\end{schema}
+\begin{schema}{some\_stock}
+stock: \nat
+\where
+stock > 0
+\end{schema}
+\begin{schema}{VM\_sale}
+VM\_operation
+\where
+stock' = stock -1 \\
+bars\_delivered! = 1 \\
+cash\_refunded! = cash\_tendered? - price \\
+takings' = takings + price
+\end{schema}
+\begin{schema}{VM\_nosale}
+VM\_operation
+\where
+stock' = stock \\
+bars\_delivered! = 0 \\
+cash\_refunded! = cash\_tendered?\\
+takings' = takings
+\end{schema}
+\begin{zed}
+VM1 \defs exact\_cash \land some\_stock \land VM\_sale
+\end{zed}
+\begin{zed}
+VM2 \defs insufficient\_cash \land VM\_nosale
+\end{zed}
+\begin{zed}
+VM3 \defs VM1 \lor VM2
+\end{zed}
+\end{document}

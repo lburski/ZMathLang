@@ -1,0 +1,129 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[\set{STUDENT}]
+\end{zed}
+
+\begin{axdef}
+\text{\declaration{\term{maxPlayers}: \expression{\nat}}}
+\where
+\text{\expression{\term{maxPlayers} = \term{20}}}
+\end{axdef}
+
+\begin{schema}{ClubState}
+\text{\declaration{\set{badminton}: \expression{\power STUDENT}}}\\
+\text{\declaration{\set{hall}: \expression{\power STUDENT}}}
+\where
+\text{\expression{\set{hall} \subseteq \set{badminton}}}\\
+\text{\expression{\term{\# \set{hall}} \leq \term{maxPlayers}}}
+\end{schema}
+
+\begin{schema}{InitClubState}
+\text{ClubState'}
+\where
+\text{\expression{\set{badminton'} = \set{\{\}}}} \\
+\text{\expression{\set{hall'} = \set{\{\}}}}
+\end{schema}
+
+\begin{schema}{AddMember}
+\text{\Delta ClubState} \\
+\text{\declaration{\term{newMember?}: \expression{STUDENT}}}
+\where
+\text{\expression{\term{newMember} \notin \set{badminton}}} \\
+\text{\expression{\set{badminton'} = \set{\set{badminton} \cup \set{\{\term{newMember?}\}}}}} \\
+\text{\expression{\set{hall'} = \set{hall}}}
+\end{schema}
+
+\begin{schema}{RemoveMember}
+\text{\Delta ClubState} \\
+\text{\declaration{\term{member?}: \expression{STUDENT}}}
+\where
+\text{\expression{\term{member?} \in \set{badminton}}} \\
+\text{\expression{\set{badminton'} = \set{\set{badminton} \setminus \set{\{\term{member?}\}}}}} \\
+\text{\expression{\set{hall'} = \set{\set{hall} \setminus \set{\{\term{member?}\}}}}}
+\end{schema}
+
+\begin{schema}{EnterHall}
+\text{\Delta ClubState} \\
+\text{\declaration{\term{enterer?}: \expression{STUDENT}}}
+\where
+\text{\expression{\term{enterer?} \in \set{badminton}}} \\
+\text{\expression{\term{enterer?} \notin \set{hall}}} \\
+\text{\expression{\term{\# \set{hall}} < \term{maxPlayers}}} \\
+\text{\expression{\set{hall'} = \set{\set{hall} \cup \set{\{\term{enterer?}\}}}}} \\
+\text{\expression{\set{badminton'} = \set{badminton}}}
+\end{schema}
+
+\begin{schema}{LeaveHall}
+\text{\Delta ClubState} \\
+\text{\declaration{\term{leaver?}: \expression{STUDENT}}}
+\where
+\text{\expression{\term{leaver?} \in \set{hall}}} \\
+\text{\expression{\set{hall'} = \set{\set{hall} \setminus \set{\{\term{leaver?}\}}}}} \\
+\text{\expression{\set{badminton'} = \set{badminton}}}
+\end{schema}
+
+\begin{zed}
+\set{MESSAGE} ::= \term{success}| \term{isMember} | \term{notMember} | \term{hallFull} | \term{inHall} | \term{notInHall}
+\end{zed}
+
+\begin{zed}
+SuccessMessage \defs [\text{\declaration{\term{outcome!}: \expression{MESSAGE}}} |
+\text{\expression{\term{outcome!} = \term{success}}}]
+\end{zed}
+
+\begin{schema}{IsMember}
+\text{\Xi ClubState} \\
+\text{\declaration{\term{newMember?}: \expression{STUDENT}}} \\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\text{\expression{\term{newMember?} \in \set{badminton}}} \\
+\text{\expression{\term{outcome!} = \term{isMember}}}
+\end{schema}
+
+\begin{schema}{NotMember}
+\text{\Xi ClubState} \\
+\text{\declaration{\term{member?}: \expression{STUDENT}}} \\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\text{\expression{\term{member?} \notin \set{badminton}}} \\
+\text{\expression{\term{outcome!} = \term{notMember}}}
+\end{schema}
+
+
+\begin{schema}{AlreadyInHall}
+\text{\Xi ClubState} \\
+\text{\declaration{\term{enterer?}: \expression{STUDENT}}} \\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\text{\expression{\term{enterer?} \in \set{hall}}} \\
+\text{\expression{\term{outcome!} = \term{inHall}}}
+\end{schema}
+
+\begin{schema}{HallFull}
+\text{\Xi ClubState} \\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\text{\expression{\term{\# \set{hall}} = \term{maxPlayers}}} \\
+\text{\expression{\term{outcome!} = \term{hallFull}}}
+\end{schema}
+
+\begin{schema}{NotInHall}
+\text{\Xi ClubState} \\
+\text{\declaration{\term{leaver?}: \expression{STUDENT}}} \\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\text{\expression{\term{leaver?} \notin \set{hall}}} \\
+\text{\expression{\term{outcome!} = \term{notInHall}}}
+\end{schema}
+
+\begin{zed}
+TotalAddMember \defs \text{\expression{(\text{AddMember} \land \text{SuccessMessage}) \lor \text{IsMember}}} \\
+TotalRemoveMember \defs \text{\expression{(\text{RemoveMember} \land \text{SuccessMessage}) \lor \text{NotMember}}} \\
+TotalEnterHall \defs \text{\expression{(\text{EnterHall} \land \text{SuccessMessage}) \lor \text{NotMember} \lor \text{AlreadyInHall} \lor \text{HallFull}}} \\
+TotalLeaveHall \defs \text{\expression{(\text{LeaveHall} \land \text{SuccessMessage}) \lor \text{NotInHall}}}
+\end{zed}
+
+\end{document}

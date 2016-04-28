@@ -1,0 +1,118 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[\set{PERSON}]
+\end{zed}
+
+\begin{zed}
+\set{GENDER}::= \term{male} | \term{female}
+\end{zed}
+
+\begin{schema}{GenDB}
+\text{\declaration{\set{parent}: \expression{PERSON \rel PERSON}}} \\
+\text{\declaration{\set{sex}: \expression{PERSON \pfun GENDER}}} \\
+\where
+\text{\expression{\set{\set{\dom \set{parent}} \cup \set{\ran \set{parent}}} \subseteq \set{\dom \set{sex}}}} \\
+\text{\expression{\forall \declaration{\term{p}: \expression{PERSON}} @ \expression{\term{\term{p} \mapsto \term{p}} \notin \set{parent\plus}}}} \\
+\text{\expression{\forall \declaration{\term{p}, \term{q}, \term{r}: \expression{PERSON}} @ \\ \expression{\expression{\set{\{\term{\term{p} \mapsto \term{q}}, \term{\term{p} \mapsto \term{r}} \}} \subseteq \set{parent}} \\
+\land \expression{\term{q} \neq \term{r}} \implies \expression{\term{\set{sex}~\term{q}} \neq \term{\set{sex}~\term{r}}}}}}
+\end{schema}
+
+\begin{schema}{InitGenDB}
+  \text{GenDB'}
+\where
+  \text{\expression{\set{sex'} = \set{\emptyset}}} \\
+  \text{\expression{\set{parent'} =  \set{\emptyset}}}
+\end{schema}
+
+\begin{schema}{AddPerson}
+\text{\Delta GenDB} \\
+\text{\declaration{\term{name?}:\expression{PERSON}}} \\
+\text{\declaration{\term{morf?}: \expression{GENDER}}}
+\where
+\text{\expression{\term{name?} \notin \set{\dom \set{sex}}}} \\
+\text{\expression{\set{sex'} = \set{\set{sex} \cup \set{\{\term{\term{name?} \mapsto \term{morf?}}\}}}}} \\
+\text{\expression{\set{parent'} = \set{parent}}}
+\end{schema}
+
+\begin{schema}{AddRel}
+  \text{\Delta GenDB} \\
+  \text{\declaration{\term{off?}, \term{par?} : \expression{PERSON}}}
+\where
+  \text{\expression{\set{\{\term{off?}, \term{par?}\}} \subseteq \set{\dom \set{sex}}}} \\
+  \text{\expression{\term{\term{off?} \mapsto \term{par?}} \notin \set{parent}}} \\
+  \text{\expression{\term{\term{par?} \mapsto \term{off?}} \notin \set{parent}}} \\
+  \text{\expression{\term{\#(\set{\set{\{\term{off?}\}} \dres \set{parent}})} \leq \term{1}}} \\
+  \text{\expression{\forall \declaration{\term{x}:\expression{PERSON}} @ \\
+  \expression{\expression{\term{\term{off?} \mapsto \term{x}} \in \set{parent}} 
+  \implies \expression{\term{\set{sex}~\term{x}} \neq \term{\set{sex}~\term{par?}}}}}} \\
+  \text{\expression{\set{sex'} = \set{sex}}}
+\end{schema}
+
+\begin{schema}{ChangeName}
+\text{\Delta GenDB} \\
+\text{\declaration{\term{old?}, \term{new?}: \expression{PERSON}}}
+\where
+\text{\expression{\term{old?} \in \set{\dom \set{sex}}}} \\
+\text{\expression{\term{new?} \notin \set{\dom \set{sex}}}} \\
+\text{\expression{\set{sex'} = \set{\set{(\set{\{\term{old?}\}} \ndres \set{sex})} \cup \set{\{\term{\term{new?} \mapsto \term{\set{sex}~\term{old?}}}\}}}}} \\
+\text{\expression{\set{parent'} = \set{\set{(\set{\{\term{old?}\}} \ndres \set{parent} \nrres \set{\{\term{old?}\}})} \\
+\cup \set{\{\declaration{\term{x}:\expression{PERSON}} |\\
+\expression{\term{x} \in \set{\set{parent} \set{\limg \set{\{\term{old?}\}} \rimg}} @ \\
+ \term{\term{new?} \mapsto \term{x}} \} }}\\
+\cup \set{\{\declaration{\term{x}:\expression{PERSON}} | \\
+\expression{ \term{x} \notin \set{\set{parent\inv} \set{\limg \set{\{\term{old?}\}} \rimg}} @ \\
+\term{\term{x} \mapsto \term{new?}}\}}}}}}
+\end{schema}
+
+\begin{schema}{ChangeSex}
+\text{\Delta GenDB} \\
+\text{\declaration{\term{p?}: \expression{PERSON}}} 
+\where
+\text{\expression{\term{p?} \in \set{\dom \set{sex}}}} \\
+\text{\expression{\set{sex'} = \set{\set{sex} \oplus \\
+\set{(\{ \declaration{\term{q}: \expression{PERSON}}; \declaration{\term{s}:\expression{GENDER}} | \\
+\expression{\expression{((\term{q} \in \set{\set{(\set{parent\inv} \semi \set{parent})\plus} \set{\limg \set{\{\term{p?}\}} \rimg})}} \\
+\land \expression{(\term{s} \neq \term{\set{sex}~ \term{q}})} @ \term{\term{q} \mapsto \term{s}} \})}}}}} \\
+\text{\expression{\set{parent'} = \set{parent}}}
+\end{schema}
+
+\begin{schema}{CommonAncestors}
+\text{\Xi GenDB} \\
+\text{\declaration{\term{p?}, \term{q?}: \expression{PERSON}}} \\
+\text{\declaration{\set{cas!}: \expression{\power PERSON}}}
+\where
+\text{\expression{\set{\set{\{\term{p?}, \term{q?}\}} \cup \set{cas!}} \subseteq \set{\dom \set{sex}}}} \\
+\text{\expression{\set{cas!} = \set{\{\declaration{\term{ca}: \expression{PERSON}} | \\
+ \expression{\exists \declaration{\term{m}, \term{n}:\expression{\nat}} @ \\
+\expression{((\expression{\term{\term{p?} \mapsto \term{ca}} \in \set{parent^{n}}} \\
+\land  \expression{\term{\term{q?} \mapsto \term{ca}} \in \set{parent^{m})}} \\
+\land \expression{\lnot \exists \declaration{\term{r}:\expression{PERSON}}; \declaration{\term{x}, \term{y}: \expression{\nat}} @ \\
+ \expression{\expression{((\term{\term{x}+\term{y}} < \term{\term{m} + \term{n}} )} \\
+ \land \expression{\term{\term{p?} \mapsto \term{r}} \in \set{parent^{x}}} \\
+ \expression{\land \term{\term{q?} \mapsto \term{r}} \in \set{parent^{y}}))\}}}}}}}}}
+\end{schema}
+
+\begin{schema}{Cousins}
+\text{\Xi GenDB} \\
+\text{\declaration{\term{p?}: \expression{PERSON}}} \\
+\text{\declaration{\term{nth?}: \expression{\nat_{1}}}} \\
+\text{\declaration{\term{rem?}: \expression{\nat}}} \\
+\text{\declaration{\set{cousins!}: \expression{\power PERSON}}}
+\where
+\text{\expression{\set{\set{\{\term{p?}\}} \cup \set{cousins!}} \subseteq \set{\dom \set{sex}} }}\\
+
+\text{\definition{\LET \set{cosrel} == \\
+ \set{(\set{\set{parent^{nth?+1}} \semi \set{(\set{parent\inv})^{nth?+1+rem?})}} \setminus \\
+ \set{(\set{parent} \semi \set{parent\inv})}} @ \\
+ \expression{\set{cousins!} = \\
+ \set{\set{\set{cosrel} \set{\limg\set{\{\term{p?}\}}\rimg}} \cup \set{\set{cosrel\inv} \set{\limg\set{\{\term{p?}\}}\rimg}}}}}}
+ \end{schema}
+
+
+
+
+
+\end{document}

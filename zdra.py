@@ -33,10 +33,29 @@ def preallowspo(a):
     for (k,l) in edgeswithnames:
         if (a == k) and (zdracheck.goto_edges[(k, l)] == "allows"):
             return l
+            
 def outputsSi(a):
     edgeswithnames = zdracheck.goto_edges
     for (k, l) in edgeswithnames:
         if (k == a) and ("SI" in l):
+            return l
+            
+def usesSS(a):
+    edgeswithnames = zdracheck.goto_edges
+    for (k, l) in edgeswithnames:
+        if (l==a) and zdracheck.goto_edges[(k, l)] == "uses":
+            return k
+            
+def usesvariables(a):
+    edgeswithnames = zdracheck.goto_edges
+    for (k, l) in edgeswithnames:
+        if (l==a) and zdracheck.goto_edges[(k, l)] == "uses":
+            return k
+            
+def DArequires(a):
+    edgeswithnames = zdracheck.goto_edges
+    for (k,l) in edgeswithnames:
+        if (a == k) and (zdracheck.goto_edges[(k, l)] == "requires"):
             return l
 
 def createPPZskel(somename):
@@ -321,7 +340,21 @@ def createIsaskel(somename):
                     if a not in printedinisaskel:
                         printedinisaskel.append(a)
                     if midname not in printedinisaskel:
-                        printedinisaskel.append(midname)        
+                        printedinisaskel.append(midname)
+#            else:
+#                if usesSS(a):
+#                    isa_ps.write("end \n \n")
+#                    isa_ps.write("record " +a+ " = " + usesSS(a) + " + \n")
+#                    isa_ps.write("(*DECLARATIONS*)\n")
+#                    isa_ps.write("\n")
+#                    isa_ps.write("locale " + midname + " = \n")
+#                    isa_ps.write("fixes (*GLOBAL DECLARATIONS*) \n")
+#                    isa_ps.write("begin\n")
+#                    isa_ps.write("\n")
+#                    if a not in printedinisaskel:
+#                        printedinisaskel.append(a)
+#                    if midname not in printedinisaskel:
+#                        printedinisaskel.append(midname)
         if b == "changeSchema" and a not in printedinisaskel:
             if outputsPre(a):
                 if preallowspo(outputsPre(a)):
@@ -364,7 +397,38 @@ def createIsaskel(somename):
                 isa_ps.write("\""+ a+ " (*"+a+"_VARIABLES*) == True\"\n")
                 isa_ps.write("\n")
                 if a not in printedinisaskel:
+                    printedinisaskel.append(a)     
+        if b == "defintionAxiom" and a not in printedinisaskel:
+            if DArequires(a):
+                isa_ps.write("fun (*"+ a+"_CONSTANT*) :: \n")
+                isa_ps.write("\"(*"+a+"_TYPES*)\" \n")
+                isa_ps.write("where \n")
+                isa_ps.write("\""+DArequires(a)+"\" \n")
+                isa_ps.write("\n")
+                if a not in printedinisaskel:
+                   printedinisaskel.append(a)
+                if DArequires(a) not in printedinisaskel:
+                    printedinisaskel.append(DArequires(a))
+        if b == "initialSchema" and a not in printedinisaskel:
+            if outputsPo(a):
+                isa_ps.write("definition " + a + " :: \n")
+                isa_ps.write(" \"(*"+a+"_TYPES*) => bool\"\n")
+                isa_ps.write("where \n")
+                isa_ps.write("\""+ a+ " (*"+a+"_VARIABLES*) == " + "(" +outputsPo(a) + ")" +"\"\n")
+                isa_ps.write("\n")
+                if a not in printedinisaskel:
                     printedinisaskel.append(a)
+                if outputsPo(a) not in printedinisaskel:
+                    printedinisaskel.append(outputsPo(a))
+            elif a not in printedinisaskel:
+                isa_ps.write("definition " + a + " :: \n")
+                isa_ps.write( "\"(*"+a+"_TYPES*) => bool\"\n")
+                isa_ps.write("where \n")
+                isa_ps.write("\""+ a+ " (*"+a+"_VARIABLES*) == True\"\n")
+                isa_ps.write("\n")
+                if a not in printedinisaskel:
+                    printedinisaskel.append(a)
+            
         if b == "outputSchema" and a not in printedinisaskel:
             if outputsPre(a):
                 if preallowspo(outputsPre(a)):
@@ -452,25 +516,6 @@ def createIsaskel(somename):
                 isa_ps.write("\n")
                 if a not in printedinisaskel:
                     printedinisaskel.append(a)
-        if b == "initialSchema" and a not in printedinisaskel:
-            if outputsPo(a):
-                isa_ps.write("definition " + a + " :: \n")
-                isa_ps.write(" \"(*"+a+"_TYPES*) => bool\"\n")
-                isa_ps.write("where \n")
-                isa_ps.write("\""+ a+ " (*"+a+"_VARIABLES*) == " + "(" +outputsPo(a) + ")" +"\"\n")
-                isa_ps.write("\n")
-                if a not in printedinisaskel:
-                    printedinisaskel.append(a)
-                if outputsPo(a) not in printedinisaskel:
-                    printedinisaskel.append(outputsPo(a))
-            elif a not in printedinisaskel:
-                isa_ps.write("definition " + a + " :: \n")
-                isa_ps.write( "\"(*"+a+"_TYPES*) => bool\"\n")
-                isa_ps.write("where \n")
-                isa_ps.write("\""+ a+ " (*"+a+"_VARIABLES*) == True\"\n")
-                isa_ps.write("\n")
-                if a not in printedinisaskel:
-                    printedinisaskel.append(a)
     isa_ps.write("end\n")            
     isa_ps.write("end")
 
@@ -492,6 +537,8 @@ class fillIn:
     stateInvarients = []
     state_variables = []
     newtpleset = []
+    definitionset = []
+    definitionbody =[]
     
     def cleanstring(self, somestring):
         somestring = self.bindersyntax(somestring)
@@ -581,6 +628,12 @@ class fillIn:
             somestring = re.sub(' subeq ', ' \<subseteq> ', somestring)
         if " mapsto " in somestring:
             somestring = re.sub(' mapsto ', ', ', somestring)
+        if "open" in somestring:
+            somestring = re.sub('open', 'open0', somestring)
+        if "pfun" in somestring:
+            somestring = re.sub('pfun', '\<rightharpoonup>', somestring)
+        elif "fun" in somestring:
+            somestring = re.sub('fun', '\<Rightarrow>', somestring)
         if "( )" in somestring:
             somestring = re.sub('\( \)', '', somestring)
         if "()" in somestring:
@@ -628,6 +681,7 @@ class fillIn:
         return string
     
     def findNewTypes(self, somepath):
+        #Finds types made by the user including datatypes
         newtypes_comp = re.compile(r".*\[\\set\{([a-zA-Z]+)\}\].*")
         manytypes_comp = re.compile(r".*\[(.*)\].*")
         set_comp = re.compile(r"\\set\{([A-Z0-9]+)\}")
@@ -643,7 +697,6 @@ class fillIn:
         for each in newtype:
             if each not in self.newtypes:
                 self.newtypes.append(each)
-                #print each
         if manytype:
             for allmanytypes in manytype:
                 if "|" not in allmanytypes:
@@ -662,9 +715,230 @@ class fillIn:
                 newdatatype = "datatype "+datatype_name+ " = "+ self.cleanstring(datatypebody)
                 if newdatatype not in self.datatypes:
                     self.datatypes.append(newdatatype) 
-                #print self.datatypes  
         labelledspec.close()
-    
+        
+    def findVariablesAndTypes(self, pathname):
+        #creates a set with zdraName, actualName, [(var,types)]
+        draName_defConstant_var = []
+        #creates a set with the zdraName of the stateSchema, actual Name and [(var,types)]
+        specName_types_var = []
+        #creates a set with all other schema Zdra Name, actual Name and [(var,Types)]
+        draName_types_var = []
+        axiomZDRa = []
+        labelspec = open(pathname, 'r')  
+     #   daaxdef_comp = re.compile(r"(\\draschema\{(DA[0-9]+)\}\{((.|\n)*?)\\begin\{axdef\}((.|\n)*?)?(\\where((.|\n)*?))?\\end\{axdef\}\})")
+     #   axdef_comp = re.compile(r"(\\draschema\{(A[0-9]+)\}\{((.|\n)*?)\\begin\{axdef\}((.|\n)*?)?(\\where((.|\n)*?))?\\end\{axdef\}\})")
+        schema_comp = re.compile(r"(\\draschema\{([AICOS0-9]+)\}\{((.|\n)*?)\\begin\{schema\}\{([a-zA-z0-9\_]*)\}((.|\n)*?)(\\where((.|\n)*?))?\\end\{schema\})")
+        entire_document = ""
+        for  each_line in labelspec:
+            entire_document+=each_line
+    #    daaxdef = daaxdef_comp.findall(entire_document);
+        schema = schema_comp.findall(entire_document);
+     #   axdef = axdef_comp.findall(entire_document);
+################################################################################################################################################################################
+#This part finds the declarations and adds to the [(var,types)] set. It reads if any schemas call upon another schema and add that
+#to it's own variables and types
+      #  if axdef:
+       #     for (entire_schema, b, c, d, e, f, g, h, i) in axdef:
+        #        pass
+ #       if daaxdef:
+  #          for (entire_schema, zdra_name, a, b, dec_part, c, exp_part, d, e) in daaxdef:
+   #             varTypesSet = []
+    #            text = re.findall(r"\\text\{(.*)\}", dec_part)
+     #           if text:
+      #              for stuffInsideText in text:
+       #                 declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+        #                if declaration:
+         #                   for dec_variables, dec_types in declaration:
+          #                      dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+           #                     for eachVariable in dec_variable:
+            #                        #print dec_types
+             #                       dec_types = self.cleanstring(dec_types)
+              #                      eachVariable = self.cleanstring(eachVariable)
+               # draName_defConstant_var.append((eachVariable, zdra_name, dec_types))
+        if schema:
+            for (entire_schema, zdra_name, a, b, actual_name, dec_part, c , exp_part, d, e) in schema:
+                #If saxiomatic schema (not axiomatic definition)  
+                if "A" in zdra_name:
+                    varTypesSet = []
+                    text = re.findall(r"\\text\{(.*)\}", dec_part)
+                    if text:
+                        for stuffInsideText in text:
+                            declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+                            if declaration:
+                                for dec_variables, dec_types in declaration:
+                                    dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+                                    for eachVariable in dec_variable:
+                                        dec_types = self.cleanstring(dec_types)
+                                        eachVariable = self.cleanstring(eachVariable)
+                                        appendtoVatTypeSet = (eachVariable, dec_types)
+                                        if (eachVariable, dec_types) not in varTypesSet:
+                                            varTypesSet.append((eachVariable, dec_types))
+                        
+                            #Here if a schemaName is called in the decpart
+                            else:
+                                for schemaZdraName, schemaActName, schemaVarTypes in draName_types_var:
+                                        if stuffInsideText == schemaActName:
+                                            if schemaVarTypes not in varTypesSet:
+                                                for (Var, Type) in schemaVarTypes:
+                                                    appendToVarSet = (Var,Type)
+                                                    varTypesSet.append(appendToVarSet)
+                                                    
+                    draName_types_var.append((zdra_name, actual_name, varTypesSet))
+               
+               #If stateSchema     
+                elif "SS" in zdra_name:
+                    varTypesSet = []
+                    text = re.findall(r"\\text\{(.*)\}", dec_part)
+                    if text:
+                        for stuffInsideText in text:
+                            declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+                            if declaration:
+                                for dec_variables, dec_types in declaration:
+                                    dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+                                    for eachVariable in dec_variable:
+                                        dec_types = self.cleanstring(dec_types)
+                                        eachVariable = self.cleanstring(eachVariable)
+                                        appendtoVatTypeSet = (eachVariable, dec_types)
+                                        if appendtoVatTypeSet not in varTypesSet:
+                                            varTypesSet.append(appendtoVatTypeSet)
+                                            
+                        
+                            #Here if a schemaName is called in the decpart
+                            else:
+                                if ("Delta" in stuffInsideText) or ("Xi" in stuffInsideText) or ("'" in stuffInsideText):
+                                    for specZdra, specName, specVars in specName_types_var:
+                                        if specName in stuffInsideText:
+                                            for Variable, Type in specVars:
+                                                primeVaribales = ((Variable + "'"), Type)
+                                                varTypesSet.append(primeVaribales)
+                                else:
+                                    for schemaZdraName, schemaActName, schemaVarTypes in draName_types_var:
+                                        if stuffInsideText == schemaActName:
+                                            if schemaVarTypes not in varTypesSet:
+                                                for (Var, Type) in schemaVarTypes:
+                                                    appendToVarSet = (Var,Type)
+                                                    varTypesSet.append(appendToVarSet)
+
+                    
+                    specName_types_var.append((zdra_name, actual_name, varTypesSet))
+                    #if an initial schema
+                elif "IS" in zdra_name:
+                    varTypesSet = []
+                    text = re.findall(r"\\text\{(.*)\}", dec_part)
+                    if text:
+                        for stuffInsideText in text:
+                            declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+                            if declaration:
+                                for dec_variables, dec_types in declaration:
+                                    dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+                                    for eachVariable in dec_variable:
+                                        dec_types = self.cleanstring(dec_types)
+                                        eachVariable = self.cleanstring(eachVariable)
+                                        appendtoVatTypeSet = (eachVariable, dec_types)
+                                        if appendtoVatTypeSet not in varTypesSet:
+                                            varTypesSet.append((eachVariable, dec_types))
+                        
+                            #Here if a schemaName is called in the decpart
+                            else:
+                                if ("Delta" in stuffInsideText) or ("Xi" in stuffInsideText) or ("'" in stuffInsideText):
+                                    for specZdra, specName, specVars in specName_types_var:
+                                        if specName in stuffInsideText:
+                                            for Variable, Type in specVars:
+                                                primeVaribales = ((Variable + "'"), Type)
+                                                varTypesSet.append(primeVaribales)
+                                                
+                                else:
+                                    for schemaZdraName, schemaActName, schemaVarTypes in draName_types_var:
+                                        if stuffInsideText == schemaActName:
+                                            if schemaVarTypes not in varTypesSet:
+                                                for (Var, Type) in schemaVarTypes:
+                                                    appendToVarSet = (Var,Type)
+                                                    varTypesSet.append(appendToVarSet)
+                    appendToSet = (zdra_name, actual_name, varTypesSet)
+                    
+                    if appendToSet not in draName_types_var:
+                        draName_types_var.append((zdra_name, actual_name, varTypesSet))
+                #if a changeSchema
+                elif "CS" in zdra_name:
+                    varTypesSet = []
+                    text = re.findall(r"\\text\{(.*)\}", dec_part)
+                    if text:
+                        for stuffInsideText in text:
+                            declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+                            if declaration:
+                                for dec_variables, dec_types in declaration:
+                                    dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+                                    for eachVariable in dec_variable:
+                                        dec_types = self.cleanstring(dec_types)
+                                        eachVariable = self.cleanstring(eachVariable)
+                                        appendtoVatTypeSet = (eachVariable, dec_types)
+                                        if appendtoVatTypeSet not in varTypesSet:
+                                            varTypesSet.append((eachVariable, dec_types))
+                        
+                            #Here if a schemaName is called in the decpart
+                            else:
+                                if ("Delta" in stuffInsideText) or ("Xi" in stuffInsideText) or ("'" in stuffInsideText):
+                                    for specZdra, specName, specVars in specName_types_var:
+                                        if specName in stuffInsideText:
+                                            for Variable, Type in specVars:
+                                                primeVaribales = ((Variable + "'"), Type)
+                                                varTypesSet.append(primeVaribales)
+                                                
+                                else:
+                                    for schemaZdraName, schemaActName, schemaVarTypes in draName_types_var:
+                                        if stuffInsideText == schemaActName:
+                                            if schemaVarTypes not in varTypesSet:
+                                                for (Var, Type) in schemaVarTypes:
+                                                    appendToVarSet = (Var,Type)
+                                                    varTypesSet.append(appendToVarSet)
+                    appendToSet = (zdra_name, actual_name, varTypesSet)
+                    
+                    if appendToSet not in draName_types_var:
+                        draName_types_var.append((zdra_name, actual_name, varTypesSet))
+                elif "OS" in zdra_name:
+                    varTypesSet = []
+                    text = re.findall(r"\\text\{(.*)\}", dec_part)
+                    if text:
+                        for stuffInsideText in text:
+                            declaration = re.findall(r"\\declaration\{(.*): *\\expression\{(.*)\}\}", stuffInsideText)
+                            if declaration:
+                                for dec_variables, dec_types in declaration:
+                                    dec_variable = re.findall(r"\\[terms]+\{(.*?)\}", dec_variables)
+                                    for eachVariable in dec_variable:
+                                        dec_types = self.cleanstring(dec_types)
+                                        eachVariable = self.cleanstring(eachVariable)
+                                        appendtoVatTypeSet = (eachVariable, dec_types)
+                                        if appendtoVatTypeSet not in varTypesSet:
+                                            varTypesSet.append((eachVariable, dec_types))
+                        
+                            #Here if a schemaName is called in the decpart
+                            else:
+                                if ("Delta" in stuffInsideText) or ("Xi" in stuffInsideText) or ("'" in stuffInsideText):
+                                    for specZdra, specName, specVars in specName_types_var:
+                                        if specName in stuffInsideText:
+                                            for Variable, Type in specVars:
+                                                primeVaribales = ((Variable + "'"), Type)
+                                                varTypesSet.append(primeVaribales)
+                                                
+                                else:
+                                    for schemaZdraName, schemaActName, schemaVarTypes in draName_types_var:
+                                        if stuffInsideText == schemaActName:
+                                            if schemaVarTypes not in varTypesSet:
+                                                for (Var, Type) in schemaVarTypes:
+                                                    appendToVarSet = (Var,Type)
+                                                    varTypesSet.append(appendToVarSet)
+                    appendToSet = (zdra_name, actual_name, varTypesSet)
+                    
+                    if appendToSet not in draName_types_var:
+                        draName_types_var.append((zdra_name, actual_name, varTypesSet))
+ #######################################################################################################################################################################################
+ #Here we will add to the expressions of the specifications so PRE, PO, and O
+
+                       
+                        
+################################DELETE THIS WHEN FINISHED#################################################################################
+################################PREVIOUS FUNCTION###################################    
     def find_zcga_info(self, pathname):
         schemaVars = []
         schemaTypes = []
@@ -673,7 +947,8 @@ class fillIn:
         multidefsend_comp = re.compile(r"\\draschema\{([a-zA-Z0-9]+)\}{([a-zA-Z0-9]+) *\\defs *\\text\{(.*)\}\}\}\}")
         draschema_comp = re.compile(r"(\\draschema\{([A-Z0-9]+)\}\{(.|\n)?\\begin\{schema\}\{([a-zA-z0-9\_]*)\}(.|\n)*?\\end\{schema\})")
         globedec_comp = re.compile(r"(\\begin\{zed\}(.|\n)*?\\end\{zed\})")
-        axdef_comp = re.compile(r"(\\draschema\{([a-zA-Z0-9]+)\}\{((.|\n)*?)\\where((.|\n)*?)\\end\{axdef\})")
+        daxdef_comp = re.compile(r"(\\draschema\{(DA[0-9]+)\}\{((.|\n)*?)\\where((.|\n)*?)\\end\{axdef\})")
+        axdef_comp = re.compile(r"(\\draschema\{(A[0-9]+)\}\{((.|\n)*?)\\where((.|\n)*?)\\end\{axdef\})")
         postcondition_comp = re.compile(r"\\draline\{(PO[0-9]+)\}\{((.|\n)*?)(\\end\{schema\}|\\end\{zed\})")
         outputcomp_comp = re.compile(r"\\draline\{(O[0-9]+)\}\{((.|\n)*?)\\end\{schema\}")
         precondition_comp = re.compile(r"\\draline\{(PRE[0-9]+)\}\{((.|\n)*?)(\\end\{schema\}|\\draline)")
@@ -689,6 +964,7 @@ class fillIn:
         for  each_line in labelspec:
             entire_document+=each_line
         axdef = axdef_comp.findall(entire_document);
+        daxdef = daxdef_comp.findall(entire_document);
         draschema = draschema_comp.findall(entire_document);
         globe_dec = globedec_comp.findall(entire_document);
         globe_deca = globedec_comp.findall(entire_document);
@@ -699,6 +975,7 @@ class fillIn:
         double_equals = dobequals_comp.findall(entire_document);
         multidefsend = multidefsend_comp.findall(entire_document);
         #find all post conditions and add them to postcondition set
+        
         for po_a, po_b, po_c, po_d in post_dec:
             poSet = []
             po_expres = re.findall(expres_comp, po_b)
@@ -720,14 +997,67 @@ class fillIn:
                 each_pre = self.cleanstring(each_pre)
                 pre_set.append(each_pre)
             self.postcondition.append((pre_a, pre_set))
+        for l, m, n, o, p, q in daxdef:
+            daxExpressions =[]
+            dax_dec = re.findall(r"\\declaration\{.*\}", n)
+            dax_exp = re.findall(r"\\expression\{.*\}", p)
+            #here we seperate the declarations (variables and types) of axiomatic definitions
+            for ab in dax_dec:
+                vars = re.findall(r"\\[terms]+\{(.*?)\}", ab)
+                expression = re.findall(r"\\expression\{(.*?)\}", ab)
+                if vars > 1:
+                    setOfVars = []
+                    for eachVars in vars:
+                        eachVars = self.cleanstring(eachVars)
+                        setOfVars.append(eachVars)
+                    for eachExpression in expression:
+                        newExpression = self.cleanstring(eachExpression)
+                    for everyVar in setOfVars:
+                        self.definitionset.append((everyVar, newExpression))
+                        #print everyVar, newExpression
+                else:
+                    print "More than one constant defined, please split into seperate constants"
+            #here we clean the body of the axiomatic definition and add it to the set
+            for ab in dax_exp:
+                ab = self.cleanstring(ab)
+                daxExpressions.append(ab)
+                
+            self.definitionbody.append((m, daxExpressions))
+        #here we look at the declarations and expressions of a normal axiomatic definition
+            #and add it to the state invariants
         for l, m, n, o, p, q in axdef:
             ax_dec = re.findall(r"\\declaration\{.*\}", n)
             ax_exp = re.findall(r"\\expression\{.*\}", p)
             for ab in ax_dec:
-                varType_dec = re.findall(r"\\[terms]+\{(.*?)\} *: *\\expression\{(.*?)\}", ab)
-                for var, var_ttype in varType_dec:
-                    var_ttype = self.cleanstring(var_ttype)
-                    self.stateDeclarations.append((var, var_ttype))
+                vars = re.findall(r"\\[terms]+\{(.*?)\}", ab)
+                expression = re.findall(r"\\expression\{(.*?)\}", ab)
+                if vars > 1:
+                    setOfVars = []
+                    for eachVars in vars:
+                        eachVars = self.cleanstring(eachVars)
+                        setOfVars.append(eachVars)
+                    for eachExpression in expression:
+                        newExpression = self.cleanstring(eachExpression)
+                    for everyVar in setOfVars:
+                        self.stateDeclarations.append((everyVar, newExpression))
+                else:
+                    for eachVar in vars:
+                        eachVar = eachVar
+                    for eachExpres in expression:
+                        if "\\power " in eachExpres:
+                            eachExpres = re.sub('\\\\power ', "", eachExpres)
+                            eachExpres = eachExpres + " set"
+                        if "\\pfun" in eachExpres:
+                            eachExpres = re.sub('\\\\pfun ', "\\<rightharpoonup> ", eachExpres)
+                            eachExpres = "(" + eachExpres + ")"
+                        if "\\fun" in eachExpres:
+                            eachExpres = re.sub('\\\\fun ', "\\<Rightarrow> ", eachExpres)
+                            eachExpres = "(" + eachExpres + ")"
+                        if "\\rel" in eachExpres:
+                            eachExpres = re.sub('\\\\rel ', "* ", eachExpres)
+                            eachExpres = "(" + eachExpres + ") set"
+                                #print eachVar
+                        self.stateDeclarations.append((eachVar, eachExpres))
                     
             for ab in ax_exp:
                 ab = self.cleanstring(ab)
@@ -756,6 +1086,7 @@ class fillIn:
                             for eachExpression in expression:
                                 newExpression = self.cleanstring(eachExpression)
                             for everyVar in setOfVars:
+                                #print everyVar
                                 self.stateDeclarations.append((everyVar, newExpression))
                                 self.state_variables.append(everyVar)
                         else:
@@ -766,14 +1097,15 @@ class fillIn:
                                         eachExpres = re.sub('\\\\power ', "", eachExpres)
                                         eachExpres = eachExpres + " set"
                                     if "\\pfun" in eachExpres:
-                                        eachExpres = re.sub('\\\\pfun ', "* ", eachExpres)
-                                        eachExpres = "(" + eachExpres + ") set"
+                                        eachExpres = re.sub('\\\\pfun ', "\<rightharpoonup> ", eachExpres)
+                                        eachExpres = "(" + eachExpres + ")"
                                     if "\\fun" in eachExpres:
-                                        eachExpres = re.sub('\\\\fun ', "* ", eachExpres)
-                                        eachExpres = "(" + eachExpres + ") set"
+                                        eachExpres = re.sub('\\\\fun ', "\<Rightarrow> ", eachExpres)
+                                        eachExpres = "(" + eachExpres + ")"
                                     if "\\rel" in eachExpres:
                                         eachExpres = re.sub('\\\\rel ', "* ", eachExpres)
                                         eachExpres = "(" + eachExpres + ") set"
+                                #print eachVar
                                 self.stateDeclarations.append((eachVar, eachExpres))
                                 self.state_variables.append(eachVar)
                 #Check for state invariants
@@ -797,6 +1129,7 @@ class fillIn:
                         for eachExpression in expression:
                             newExpression = self.cleanstring(eachExpression)
                         for everyVar in setOfVars:
+                           #print everyVar
                             self.stateDeclarations.append((everyVar, newExpression))
                             self.state_variables.append(everyVar)
                     else:
@@ -807,12 +1140,13 @@ class fillIn:
                                 eachExpres = re.sub('\\\\power ', "", eachExpres)
                                 eachExpres = eachExpres + " set"
                             if "\\pfun" in eachExpres:
-                                eachExpres = re.sub('\\\\pfun ', "* ", eachExpres)
-                                eachExpres = "(" + eachExpres + ") set"
+                                eachExpres = re.sub('\\\\pfun ', "\\<rightharpoonup> ", eachExpres)
+                                eachExpres = "(" + eachExpres + ")"
                             if "\\fun" in eachExpres:
-                                eachExpres = re.sub('\\\\fun ', "* ", eachExpres)
-                                eachExpres = "(" + eachExpres + ") set"
+                                eachExpres = re.sub('\\\\fun ', "\\<Rightarrow> ", eachExpres)
+                                eachExpres = "(" + eachExpres + ")"
                         self.stateDeclarations.append((eachVar, eachExpres))
+                        #print eachVar
                         self.state_variables.append(eachVar)
                 #Check for state invariants
                 #TODO if there are more then 1 state invarient
@@ -855,7 +1189,6 @@ class fillIn:
                     decs_types = []
                     for (abc, eachone) in text:
                         if abc == "\\Delta":
-                            #print self.state_variables
                             eachone = self.cleanstring(eachone)
                             for (zdra_name, act_name) in self.nodesNnames:
                                 if eachone == act_name:
@@ -869,7 +1202,6 @@ class fillIn:
                                     if ((eachone.lower()+"'")) not in decs_vars:
                                         decs_vars.append((eachone.lower()+"'"))
                                     for (state_variables, state_types) in self.stateDeclarations:
-                                        #print self.stateDeclarations
                                         isabelleSyntax =  self.setSyntax(state_types)
                                         #if "set" in isabelleSyntax:
                                         decs_vars.append(state_variables+ "'")
@@ -943,19 +1275,24 @@ class fillIn:
                                     DecsforSchema.append(aTypes)
                         else:
                             for aVars in vars:
-                                aVars = self.cleanstring(aVars)
+                                #aVars = self.cleanstring(aVars)
                                 if aVars not in self.state_variables:
                                     if aVars not in VarsforSchema:
-                                        VarsforSchema.append(aVars)
+                                        pass
+                                        #print type(aVars)
+                                        #print VarsforSchema
+                                        #VarsforSchema.extend(aVars)
                                     for aTypes in expression:
                                         aTypes = self.cleanstring(aTypes)
                                         aTypes = self.setSyntax(aTypes)
                                         DecsforSchema.append(aTypes)
+                                        #print DecsforSchema
                     #Get rid of duplicates                    
                     newlist = list(set(zip(DecsforSchema, VarsforSchema)))
                     if newlist:
                         DecsforSchema, VarsforSchema = zip(*newlist)
                     self.schemaVarTypes.append((h, DecsforSchema, VarsforSchema))
+                    #print self.schemaVarTypes
                     
                     
                 else:
@@ -1131,7 +1468,9 @@ class fillIn:
         return decsToPrint
   
         labelspec.close()
-    
+ 
+#########################################UP TO HERE##################################################
+   
     #Creates a new set, where the first element is a name of the schema,
     #second element is the types of that schema, third element is the variables
     #of that schema
@@ -1205,9 +1544,8 @@ class fillIn:
                 self.allnodes.append((line.group(1), "draline"))
         labelspec.close()
     
-
     
-    def replace(self, file_path, pattern, subst):
+    def replacea(self, file_path, pattern, subst):
         #Create temp file
         fh, abs_path = mkstemp()
         with open(abs_path,'w') as new_file:
@@ -1221,7 +1559,7 @@ class fillIn:
         move(abs_path, file_path)
                 
     
-    def replacea(self, file_path, pattern, subst):
+    def replace(self, file_path, pattern, subst):
         pass
         
     
@@ -1246,7 +1584,8 @@ class fillIn:
             string = string + " list"
 
         return string
-    
+        
+###########################FIX THIS FUNCTION WITH THE NEW SET CREATED################################
     def fillinIsa(self, zcgazdra, isaskel):
         allStateinvarients = []
         self.findNewTypes(zcgazdra)
@@ -1295,6 +1634,7 @@ class fillIn:
                         statedecs.append(newStateDec)
                 joinStateDecs = "".join(statedecs)
                 self.replace(isaskel, each_line, joinStateDecs)
+               # print joinStateDecs
             if "(*GLOBAL DECLARATIONS*)" in each_line and self.globalTypesvars:
                 SetOfGlobeDecs = []
                 for (var_a, var_b, var_c) in self.globalTypesvars:
@@ -1442,11 +1782,14 @@ x = fillIn()
 #TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_clubstate2.tex")
 #TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_clubstate2.thy")
 
-TheLabeledSpec= ("/home/jeff/lavinias_workspace/zdra/fullexample.tex")
-TheIsaSkel = ("/home/jeff/lavinias_workspace/zdra/gpsafullexample.thy")
+#TheLabeledSpec= ("/home/jeff/lavinias_workspace/zdra/fullexample.tex")
+#TheIsaSkel = ("/home/jeff/lavinias_workspace/zdra/gpsafullexample.thy")
 
 #TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_videoshop.tex")
 #TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_videoshop.thy")
+
+TheLabeledSpec= ("1n2.tex")
+TheIsaSkel = ("gpsa1n2.thy")
 
 ##########
 ##Create IsaSkeleton to use without interface
@@ -1468,8 +1811,10 @@ def createSkeleton():
 
 def fillinskeleton():
     x.fillinIsa(TheLabeledSpec, TheIsaSkel)
-    x.fillinIsa(TheLabeledSpec, TheIsaSkel)
-    x.fillNames(TheIsaSkel)
+    #x.fillinIsa(TheLabeledSpec, TheIsaSkel)
+    #x.fillNames(TheIsaSkel)
     
 #createSkeleton()
 #fillinskeleton()
+
+x.findVariablesAndTypes(TheLabeledSpec)

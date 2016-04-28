@@ -1,0 +1,108 @@
+
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[PERSON]
+\end{zed}
+
+\begin{zed}
+GENDER::= male | female
+\end{zed}
+
+\begin{schema}{GenDB}
+parent: PERSON \rel PERSON \\
+sex: PERSON \pfun GENDER \\
+\where
+\dom parent \cup \ran parent \subseteq \dom sex \\
+\forall p: PERSON @ p \mapsto p \notin parent\plus \\
+\forall p, q, r: PERSON @ \{p \mapsto q, p \mapsto r \} \subseteq parent \\
+\land q \neq r \implies sex~q \neq sex~r 
+\end{schema}
+
+\begin{schema}{InitGenDB}
+  GenDB'
+\where
+  sex' = \emptyset \\
+  parent' =  \emptyset
+\end{schema}
+
+\begin{schema}{AddPerson}
+\Delta GenDB \\
+name?:PERSON \\
+morf?: GENDER
+\where
+name? \notin \dom sex \\
+sex' = sex \cup \{name? \mapsto morf?\} \\
+parent' = parent
+\end{schema}
+
+\begin{schema}{AddRel}
+  \Delta GenDB \\
+  off?, par? : PERSON
+\where
+  \{off?, par?\} \subseteq \dom sex \\
+  off? \mapsto par? \notin parent \\
+  par? \mapsto off? \notin parent \\
+  \#(\{off?\} \dres parent) \leq 1 \\
+  \forall x:PERSON @ off? \mapsto x \in parent \implies sex~x \neq sex~par? \\
+  sex' = sex
+\end{schema}
+
+\begin{schema}{ChangeName}
+\Delta GenDB \\
+old?, new?: PERSON
+\where
+old? \in \dom sex \\
+new? \notin \dom sex \\
+sex' = (\{old?\} \ndres sex) \cup \{new? \mapsto sex~old?\} \\
+parent' = (\{old?\} \ndres parent \nrres \{old?\}) \\
+\cup \{x:PERSON | x \in parent \limg\{old?\} \rimg @ new? \mapsto x \} \\
+\cup \{x:PERSON | x \notin parent\inv \limg \{old?\} \rimg @ x \mapsto new?\}
+\end{schema}
+
+\begin{schema}{ChangeSex}
+\Delta GenDB \\
+p?: PERSON 
+\where
+p? \in \dom sex \\
+sex' = sex \oplus \\
+(\{ q: PERSON; s:GENDER | \\
+((q \in (parent\inv \semi parent)\plus \limg \{p?\} \rimg)
+\land (s \neq sex~ q) @ q \mapsto s \}) \\
+parent' = parent
+\end{schema}
+
+\begin{schema}{CommonAncestors}
+\Xi GenDB \\
+p?, q?: PERSON \\
+cas!: \power PERSON
+\where
+\{p?, q?\} \cup cas! \subseteq \dom sex \\
+
+cas! = \{ca: PERSON | \exists m, n:\nat @ \\
+((p? \mapsto ca \in parent^{n} \land q? \mapsto ca \in parent^{m}) \\
+\land \lnot \exists r:PERSON; x, y: \nat @ ((x+y < m + n ) \\
+ \land p? \mapsto r \in parent^{x} \land q? \mapsto r \in parent^{y}))\}
+\end{schema}
+
+\begin{schema}{Cousins}
+\Xi GenDB \\
+p?: PERSON \\
+nth?: \nat_{1} \\
+rem?: \nat \\
+cousins!: \power PERSON
+\where
+\{p?\} \cup cousins! \dom sex \\
+
+\LET cosrel == (parent^{nth?+1} \semi (parent\inv)^{nth?+1+rem?}) \setminus
+ (parent \semi parent\inv) @ \\
+ cousins! = cosrel \limg\{p?\}\rimg \cup cosrel\inv\limg\{p?\}\rimg
+ \end{schema}
+
+
+
+
+
+\end{document}

@@ -1,0 +1,16 @@
+axiom A1
+stateSchema SS1 
+stateInvarients SI1 
+stateSchema SS2 
+stateInvarients SI2 
+initialSchema IS1 
+postcondition PO1 
+changeSchema CS1 
+precondition PRE1 
+changeSchema CS3 
+precondition PRE3 
+changeSchema CS2 
+precondition PRE2 
+postcondition PO4 
+postcondition PO2 
+postcondition PO3 

@@ -1,0 +1,182 @@
+axiom A2 
+
+axiom A3 
+
+axiom A4 
+
+axiom A5 
+
+axiom A6 
+
+stateSchema SS1 
+
+initialSchema IS1 
+
+postcondition PO1 
+
+stateSchema SS2 
+
+initialSchema IS6 
+
+postcondition PO10 
+
+precondition PRE4 
+
+changeSchema CS8 
+
+precondition PRE17 
+
+changeSchema CS5 
+
+precondition PRE14 
+
+changeSchema CS7 
+
+precondition PRE16 
+
+changeSchema CS3 
+
+precondition PRE8 
+
+changeSchema CS12 
+
+precondition PRE21 
+
+outputSchema OS1 
+
+output O1 
+
+outputSchema OS3 
+
+precondition PRE6 
+
+outputSchema OS2 
+
+output O2 
+
+outputSchema OS5 
+
+outputSchema OS4 
+
+outputSchema OS6 
+
+output O3 
+
+postcondition PO23 
+
+initialSchema IS9 
+
+precondition PRE11 
+
+initialSchema IS8 
+
+precondition PRE10 
+
+initialSchema IS3 
+
+precondition PRE2 
+
+initialSchema IS2 
+
+precondition PRE1 
+
+initialSchema IS7 
+
+precondition PRE9 
+
+initialSchema IS5 
+
+initialSchema IS4 
+
+precondition PRE3 
+
+axiom A1 
+
+postcondition PO9 
+
+changeSchema CS10 
+
+precondition PRE19 
+
+postcondition PO4 
+
+postcondition PO5 
+
+postcondition PO2 
+
+postcondition PO3 
+
+postcondition PO21 
+
+changeSchema CS9 
+
+precondition PRE18 
+
+changeSchema CS4 
+
+precondition PRE13 
+
+changeSchema CS6 
+
+precondition PRE15 
+
+changeSchema CS1 
+
+precondition PRE5 
+
+changeSchema CS2 
+
+precondition PRE7 
+
+postcondition PO8 
+
+changeSchema CS11 
+
+precondition PRE20 
+
+changeSchema CS13 
+
+precondition PRE22 
+
+initialSchema IS10 
+
+precondition PRE12 
+
+postcondition PO11 
+
+postcondition PO12 
+
+postcondition PO13 
+
+postcondition PO14 
+
+postcondition PO15 
+
+postcondition PO16 
+
+postcondition PO17 
+
+postcondition PO18 
+
+postcondition PO19 
+
+lemma TS5 
+
+lemma TS4 
+
+lemma TS1 
+
+lemma TS2 
+
+lemma TS3 
+
+postcondition PO6 
+
+postcondition PO20 
+
+postcondition PO22 
+
+postcondition PO24 
+
+lemma TS6 
+

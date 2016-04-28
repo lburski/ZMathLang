@@ -1,0 +1,104 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T2}{0.4}{
+\begin{zed}
+[STUDENT]
+\end{zed}
+
+\draschema{A1}{
+\begin{axdef}
+maxPlayers: \nat
+\where
+maxPlayers = 20
+\end{axdef}}
+
+\draschema{SS1}{
+\begin{schema}{ClubState}
+badminton: \power STUDENT\\
+hall: \power STUDENT
+\where
+\draline{SI1}{hall \subseteq badminton\\
+\# hall \leq maxPlayers}
+\end{schema}}
+
+\uses{SS1}{A1}
+\requires{SS1}{SI1}
+
+\draschema{SS2}{
+\begin{schema}{ClubState2}
+ClubState\\
+onCourt: \power STUDENT\\
+waiting: \iseq STUDENT
+\where
+\draline{SI2}{\langle onCourt, \ran waiting \rangle \partition hall}
+\end{schema}}
+
+\requires{SS2}{SI2}
+\uses{SS2}{SS1}
+
+\draschema{IS1}{
+\begin{schema}{InitClubState2}
+ClubState2
+\where
+\draline{PO1}{badminton' = \{\}}
+\end{schema}}
+
+\uses{IS1}{SS2}
+\requires{IS1}{PO1}
+\uses{IS1}{SS1}
+
+\draschema{CS1}{
+\begin{schema}{NewGame}
+\Delta ClubState2
+\where
+\draline{PRE1}{onCourt = \emptyset\\
+\# waiting \geq 2\\
+\# waiting \geq 4 \implies \# onCourt' = 4\\
+\# waiting < 4 \implies (\# onCourt' = 2\\
+\lor (\# onCourt' = 3)\\
+head~waiting \in onCourt'}\\
+\draline{PO2}{onCourt' \subseteq \ran (1\upto 6 \lhd waiting)\\
+waiting' = waiting \project ((ran waiting) \setminus onCourt')\\
+hall' = hall\\
+badminton' = badminton}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{FinishGame}
+\Delta ClubState2
+\where
+\draline{PRE2}{onCourt \neq \{\}\\
+onCourt' = \{\}}\\
+\draline{PO3}{\exists s: \iseq STUDENT @ \\
+(\ran s = onCourt \land waiting' = waiting \cat s)\\
+hall' = hall\\
+badminton' = badminton}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\allows{PRE2}{PO3}
+\requires{CS2}{PRE2}
+
+\draschema{CS3}{
+\begin{schema}{LeaveHall}
+\Delta ClubState2\\
+p?: STUDENT
+\where
+\draline{PRE3}{p? \in \ran waiting} \\
+\draline{PO4}{waiting' = squash~(waiting \nrres\{p?\})\\
+hall' = hall \setminus \{p?\}\\
+badminton' = badminton}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\allows{PRE3}{PO4}
+\requires{CS3}{PRE3}
+}
+
+\end{document}

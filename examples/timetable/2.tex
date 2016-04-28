@@ -1,0 +1,122 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T5}{0.3}{
+\begin{zed}
+[STUDENT, MODULE, TIMESLOT, ROOM]
+\end{zed}
+
+\draschema{A1}{
+\begin{gendef}[X, Y, Z]
+allPairs: (X \pfun ( Y \rel Z) \fun (Y \rel Z)
+\where
+\forall f: (X \pfun (Y \rel Z)) @ \\
+allPairs~f = \\ \bigcup \{x: X | x \in \dom f @ fx\}
+\end{gendef}}
+
+\draschema{SS1}{
+\begin{schema}{Timetable}
+studentTT: STUDENT \pfun (TIMESLOT \pfun ROOM)\\
+moduleTT: MODULE \pfun (TIMESLOT \rel ROOM)
+\where
+\draline{SI1}{\forall r, s: \ran moduleTT @ \\
+\disjoint \langle r, s \rangle\\
+{}\\
+allPairs~studentTT \subseteq allPairs~moduleTT\\
+{}\\
+\forall s: \dom studentTT; 
+m: \dom moduleTT\\
+@ (studentTT~s \cap moduleTT~m) \neq \emptyset \implies\\
+\dom (studentTT~s \cap moduleTT~m) = \dom (moduleTT~m)}
+\end{schema}}
+
+\uses{SS1}{A1}
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitTimetable}
+Timetable'
+\where
+\draline{PO1}{studentTT' = \{\}\\
+moduleTT'= \{\}}
+\end{schema}}
+
+\uses{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{AddStudent}
+\Delta Timetable\\
+s?: STUDENT
+\where
+\draline{PRE1}{s? \notin \dom studentTT}\\
+\draline{PO2}{studentTT' = studentTT \cup \{s? \mapsto \emptyset\}\\
+moduleTT' = moduleTT}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{ScheduleModule}
+\Delta Timetable\\
+m?: MODULE
+\where
+\draline{PRE2}{m? \in \dom moduleTT\\
+moduleTT~m? = \emptyset} \\
+\draline{PO3}{\exists schedule: TIMESLOT \rel ROOM @ \\
+(allPairs~moduleTT \cap schedule = \emptyset \\
+\land moduleTT' = moduleTT \oplus \{m? \mapsto schedule\})\\
+studentTT' = studentTT}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\uses{CS2}{A1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{DescheduleModule}
+\Delta Timetable\\
+m?: MODULE
+\where
+\draline{PRE3}{m? \in \dom moduleTT\\
+moduleTT~m? \neq \emptyset}\\
+\draline{PO4}{moduleTT' = moduleTT \oplus \{m? \mapsto \emptyset \} \\
+studentTT' = \\
+\bigcup \{s: \dom studentTT @ \\
+ \{s \mapsto (studentTT~s \setminus moduleTT~m?)\}\}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{CS4}{
+\begin{schema}{RegForModule}
+\Delta Timetable\\
+s?: STUDENT\\
+m?: MODULE
+\where
+\draline{PRE4}{s? \in \dom studentTT\\
+m? \in \dom moduleTT\\
+moduleTT~m? \neq \emptyset \\
+\dom (studentTT~s?) \cap \dom (moduleTT~m?) \neq \emptyset} \\
+{}\\
+\draline{PO5}{\exists newPairs: TIMESLOT \pfun ROOM \\
+@ \\
+((\dom newPairs = \dom moduleTT~m?)\\
+\land (newPairs \subseteq moduleTT~m?)\\
+\land (studentTT' = \\
+ studentTT \oplus \{s? \mapsto studentTT~s? \cup newPairs \}))\\
+{}\\
+moduleTT' = moduleTT}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PRE4}
+\allows{PRE4}{PO5}
+}
+\end{document}

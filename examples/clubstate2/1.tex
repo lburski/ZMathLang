@@ -1,0 +1,80 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[\set{STUDENT}]
+\end{zed}
+
+\begin{axdef}
+\text{\declaration{\term{maxPlayers}: \expression{\nat}}}
+\where
+\text{\expression{\term{maxPlayers} = \term{20}}}
+\end{axdef}
+
+\begin{schema}{ClubState}
+\text{\declaration{\set{badminton}: \expression{\power STUDENT}}}\\
+\text{\declaration{\set{hall}: \expression{\power STUDENT}}}
+\where
+\text{\expression{\set{hall} \subseteq \set{badminton}}}\\
+\text{\expression{\term{\# \set{hall}} \leq \term{maxPlayers}}}
+\end{schema}
+
+\begin{schema}{ClubState2}
+\text{ClubState}\\
+\text{\declaration{\set{onCourt}: \expression{\power STUDENT}}}\\
+\text{\declaration{\set{waiting}: \expression{\iseq STUDENT}}}
+\where
+\text{\expression{\set{\langle \set{onCourt}, \set{\ran \set{waiting}} 
+\rangle} \partition \set{hall}}}
+\end{schema}
+
+\begin{schema}{InitClubState2}
+\text{ClubState2}
+\where
+\text{\expression{\set{badminton'} = \set{\{\}}}}
+\end{schema}
+
+\begin{schema}{NewGame}
+\text{\Delta ClubState2}
+\where
+\text{\expression{\set{onCourt} = \set{\emptyset}}}\\
+\text{\expression{\term{\# \set{waiting}} \geq \term{2}}}\\
+\text{\expression{\expression{\term{\# \set{waiting}} \geq
+ \term{4}} \implies \expression{\term{\# \set{onCourt'}} = \term{4}}}}\\
+\text{\expression{\expression{\term{\# \set{waiting}} < 
+\term{4}} \implies \expression{(\term{\# \set{onCourt'}} = \term{2})}\\
+\lor \expression{(\term{\# \set{onCourt'}} = \term{3})}}}\\
+\text{\expression{\term{head~\set{waiting}} \in \set{onCourt'}}}\\
+\text{\expression{\set{onCourt'} \subseteq \set{\ran 
+(\set{\set{1\upto 6} \lhd \set{waiting}})}}}\\
+\text{\expression{\set{waiting'} = \set{\set{waiting}
+ \project ((\set{\set{\ran \set{waiting}}) \setminus \set{onCourt'}})}}}\\
+\text{\expression{\set{hall'} = \set{hall}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}
+\end{schema}
+
+\begin{schema}{FinishGame}
+\text{\Delta ClubState2}
+\where
+\text{\expression{\set{onCourt} \neq \set{\{\}}}}\\
+\text{\expression{\set{onCourt'} = \set{\{\}}}}\\
+\text{\expression{\exists \declaration{\set{s}: \expression{\iseq STUDENT}} @ \\
+(\expression{\set{\ran \set{s}} = \set{onCourt}} \land 
+\expression{\set{waiting'} = \set{\set{waiting} \cat \set{s}})}}}\\
+\text{\expression{\set{hall'} = \set{hall}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}
+\end{schema}
+
+\begin{schema}{LeaveHall}
+\text{\Delta ClubState2}\\
+\text{\declaration{\term{p?}: \expression{STUDENT}}}
+\where
+\text{\expression{\term{p?} \in \set{\ran \set{waiting}}}}\\
+\text{\expression{\set{waiting'} = \set{squash(\set{\set{waiting}
+ \nrres \set{\{\term{p?}\}}})}}}\\
+\text{\expression{\set{hall'} = \set{\set{hall} \setminus \set{\{\term{p?}\}}}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}
+\end{schema}
+
+\end{document}

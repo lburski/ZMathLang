@@ -1,0 +1,91 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[STUDENT, MODULE, TIMESLOT, ROOM]
+\end{zed}
+
+\begin{gendef}[X, Y, Z]
+allPairs: (X \pfun ( Y \rel Z) \fun (Y \rel Z)
+\where
+\forall f: (X \pfun (Y \rel Z)) @ \\
+allPairs~f = \\ \bigcup \{x: X | x \in \dom f @ fx\}
+\end{gendef}
+
+\begin{schema}{Timetable}
+studentTT: STUDENT \pfun (TIMESLOT \pfun ROOM)\\
+moduleTT: MODULE \pfun (TIMESLOT \rel ROOM)
+\where
+\forall r, s: \ran moduleTT @ \\
+\disjoint \langle r, s \rangle\\
+{}\\
+allPairs~studentTT \subseteq allPairs~moduleTT\\
+{}\\
+\forall s: \dom studentTT; 
+m: \dom moduleTT\\
+@ (studentTT~s \cap moduleTT~m) \neq \emptyset \implies\\
+\dom (studentTT~s \cap moduleTT~m) = \dom (moduleTT~m)
+\end{schema}
+
+\begin{schema}{InitTimetable}
+Timetable'
+\where
+studentTT' = \{\}\\
+moduleTT'= \{\}
+\end{schema}
+
+\begin{schema}{AddStudent}
+\Delta Timetable\\
+s?: STUDENT
+\where
+s? \notin \dom studentTT\\
+studentTT' = studentTT \cup \{s? \mapsto \emptyset\}\\
+moduleTT' = moduleTT
+\end{schema}
+
+\begin{schema}{ScheduleModule}
+\Delta Timetable\\
+m?: MODULE
+\where
+m? \in \dom moduleTT\\
+moduleTT~m? = \emptyset \\
+\exists schedule: TIMESLOT \rel ROOM @ \\
+(allPairs~moduleTT \cap schedule = \emptyset \\
+\land moduleTT' = moduleTT \oplus \{m? \mapsto schedule\})\\
+studentTT' = studentTT
+\end{schema}
+
+\begin{schema}{DescheduleModule}
+\Delta Timetable\\
+m?: MODULE
+\where
+m? \in \dom moduleTT\\
+moduleTT~m? \neq \emptyset\\
+moduleTT' = moduleTT \oplus \{m? \mapsto \emptyset \} \\
+studentTT' = \\
+\bigcup \{s: \dom studentTT @ \\
+ \{s \mapsto (studentTT~s \setminus moduleTT~m?)\}\}
+\end{schema}
+
+\begin{schema}{RegForModule}
+\Delta Timetable\\
+s?: STUDENT\\
+m?: MODULE
+\where
+s? \in \dom studentTT\\
+m? \in \dom moduleTT\\
+moduleTT~m? \neq \emptyset \\
+\dom (studentTT~s?) \cap \dom (moduleTT~m?) \neq \emptyset \\
+{}\\
+\exists newPairs: TIMESLOT \pfun ROOM \\
+@ \\
+((\dom newPairs = \dom moduleTT~m?)\\
+\land (newPairs \subseteq moduleTT~m?)\\
+\land (studentTT' = \\
+ studentTT \oplus \{s? \mapsto studentTT~s? \cup newPairs \}))\\
+{}\\
+moduleTT' = moduleTT
+\end{schema}
+
+\end{document}

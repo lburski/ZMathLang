@@ -1,0 +1,207 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T2}{0.22}{
+\begin{zed}
+[STUDENT]
+\end{zed}
+
+\draschema{A1}{
+\begin{axdef}
+maxPlayers: \nat
+\where
+maxPlayers = 20
+\end{axdef}}
+
+\draschema{SS1}{
+\begin{schema}{ClubState}
+badminton: \power STUDENT\\
+hall: \power STUDENT
+\where
+\draschema{SI1}{hall \subseteq badminton\\
+\# hall \leq maxPlayers}
+\end{schema}
+}
+
+\requires{SS1}{SI1}
+\uses{SS1}{A1}
+
+\draschema{IS1}{
+\begin{schema}{InitClubState}
+ClubState'
+\where
+\draline{PO1}{badminton' = \{\} \\
+hall' = \{\}}
+\end{schema}}
+
+\initialof{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{AddMember}
+\Delta ClubState \\
+newMember?: STUDENT
+\where
+\draline{PRE1}{newMember \notin badminton} \\
+\draline{PO2}{badminton' = badminton \cup \{newMember?\} \\
+hall' = hall}
+\end{schema}}
+
+\allows{PRE1}{PO2}
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+
+\draschema{CS2}{
+\begin{schema}{RemoveMember}
+\Delta ClubState \\
+member?: STUDENT
+\where
+\draline{PRE2}{member? \in badminton} \\
+\draline{PO3}{badminton' = badminton \setminus \{member?\}\\
+hall' = hall \setminus \{member?\}}
+\end{schema}}
+
+\allows{PRE2}{PO3}
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+
+\draschema{CS3}{
+\begin{schema}{EnterHall}
+\Delta ClubState \\
+enterer?: STUDENT
+\where
+\draline{PRE3}{enterer? \in badminton \\
+enterer? \notin hall \\
+\# hall < maxPlayers}\\
+\draline{PO4}{hall' = hall \cup \{enterer?\} \\
+badminton' = badminton}
+\end{schema}}
+
+\allows{PRE3}{PO4}
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\uses{CS3}{A1}
+
+\draschema{CS4}{
+\begin{schema}{LeaveHall}
+\Delta ClubState \\
+leaver?: STUDENT
+\where
+\draline{PRE4}{leaver? \in hall} \\
+\draline{PO5}{hall' = hall \setminus \{leaver?\} \\
+badminton' = badminton}
+\end{schema}}
+
+\allows{PRE4}{PO5}
+\uses{CS4}{IS1}
+\requires{CS4}{PRE4}
+
+\begin{zed}
+MESSAGE ::= success | isMember | notMember | hallFull | inHall | notInHall
+\end{zed}
+
+\draschema{OS6}{
+\begin{zed}
+SuccessMessage \defs [outcome!: MESSAGE | \\
+\draline{PO6}{outcome! = success}]
+\end{zed}}
+
+\requires{OS6}{PO6}
+
+\draschema{OS1}{
+\begin{schema}{IsMember}
+\Xi ClubState \\
+newMember?: STUDENT \\
+outcome!: MESSAGE
+\where
+\draline{PRE5}{newMember? \in badminton} \\
+\draline{O1}{outcome! = isMember}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\allows{PRE5}{O1}
+\requires{OS1}{PRE5}
+
+\draschema{OS2}{
+\begin{schema}{NotMember}
+\Xi ClubState \\
+member?: STUDENT \\
+outcome!: MESSAGE
+\where
+\draline{PRE6}{member? \notin badminton} \\
+\draline{O2}{outcome! = notMember}
+\end{schema}}
+
+\uses{OS2}{SS1}
+\allows{PRE6}{O2}
+\requires{OS2}{PRE6}
+
+\draschema{OS3}{
+\begin{schema}{AlreadyInHall}
+\Xi ClubState \\
+enterer?: STUDENT \\
+outcome!: MESSAGE
+\where
+\draline{PRE7}{enterer? \in hall} \\
+\draline{O3}{outcome! = inHall}
+\end{schema}}
+
+\uses{OS3}{SS1}
+\allows{PRE7}{O3}
+\requires{OS3}{PRE7}
+
+\draschema{OS4}{
+\begin{schema}{HallFull}
+\Xi ClubState \\
+outcome!: MESSAGE
+\where
+\draline{PRE8}{\# hall = maxPlayers} \\
+\draline{O4}{outcome! = hallFull}
+\end{schema}}
+
+\uses{OS4}{SS1}
+\allows{PRE8}{O4}
+\requires{OS4}{PRE8}
+\uses{OS4}{A1}
+
+\draschema{OS5}{
+\begin{schema}{NotInHall}
+\Xi ClubState \\
+leaver?: STUDENT \\
+outcome!: MESSAGE
+\where
+\draline{PRE9}{leaver? \notin hall}\\
+\draline{O5}{outcome! = notInHall}
+\end{schema}}
+
+\uses{OS5}{SS1}
+\allows{PRE9}{O5}
+\requires{OS5}{PRE9}
+
+\begin{zed}
+\draschema{TS1}{TotalAddMember \defs (AddMember \land SuccessMessage) \lor IsMember} \\
+\draschema{TS2}{TotalRemoveMember \defs (RemoveMember \land SuccessMessage) \lor NotMember} \\
+\draschema{TS3}{TotalEnterHall \defs (EnterHall \land SuccessMessage) \lor NotMember \lor AlreadyInHall \lor HallFull} \\
+\draschema{TS4}{TotalLeaveHall \defs (LeaveHall \land SuccessMessage) \lor NotInHall}
+\end{zed}
+
+\totalises{TS1}{CS1}
+\totalises{TS1}{OS6}
+\totalises{TS1}{OS1}
+
+\totalises{TS2}{CS2}
+\totalises{TS2}{OS6}
+\totalises{TS2}{OS2}
+
+\totalises{TS3}{CS3}
+\totalises{TS3}{OS6}
+\totalises{TS3}{OS2}
+\totalises{TS3}{OS3}
+\totalises{TS3}{OS4}
+
+\totalises{TS4}{CS4}
+\totalises{TS4}{OS6}
+\totalises{TS4}{OS5}
+}
+\end{document}

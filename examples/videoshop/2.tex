@@ -1,0 +1,234 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T4}{0.2}{
+\begin{zed}
+[PERSON]
+\end{zed}
+
+\begin{zed}
+[TITLE]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{VideoShop}
+members: \power PERSON\\
+rented: PERSON \rel TITLE\\
+stockLevel: TITLE \pfun \nat_1
+\where
+\draline{SI1}{\dom rented \subseteq members\\
+\ran rented \subseteq \dom stockLevel\\
+\forall t: \ran rented @
+\# (rented \rres 
+\{t\}) \leq stockLevel~t}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitVideoShop}
+VideoShop'
+\where
+\draline{PO1}{members' = \{\}\\
+stockLevel' = \{\}}
+\end{schema}}
+
+\uses{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{RentVideo}
+\Delta VideoShop\\
+p?: PERSON\\
+t?: TITLE
+\where
+\draline{PRE1}{p? \in members\\
+t? \in \dom stockLevel\\
+stockLevel~t? > 
+\# (rented \rres \{t?\})\\
+p? \mapsto t? \notin rented}\\
+\draline{PO2}{rented'= 
+rented \cup \{p? \mapsto t?\}\\
+stockLevel' = stockLevel\\
+members' = members}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{ChangeStockLevel}
+\Delta VideoShop\\
+t?: TITLE\\
+change?: \num
+\where
+\draline{PRE2}{t? \in \dom stockLevel\\
+stockLevel~t? + change? > 0\\
+stockLevel~t? + change? \geq (\# (rented \rres \{t?\}))}\\
+\draline{PO3}{
+stockLevel' = stockLevel \oplus \{t? \mapsto stockLevel~t? + change?\}\\
+rented' = rented\\
+members' = members}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{DeleteTitle}
+\Delta VideoShop\\
+t?: TITLE
+\where
+\draline{PRE3}{t? \notin \ran rented\\
+t? \in \dom stockLevel} \\
+\draline{PO4}{stockLevel' =
+ \{t?\} \ndres stockLevel\\
+members' = members\\
+rented' = rented}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{OS1}{
+\begin{schema}{TitlesOut}
+\Xi VideoShop\\
+p?: PERSON\\
+titles!: \power TITLE
+\where
+\draline{PRE4}{p? \in members}\\
+\draline{O1}{
+titles! = rented \limg \{p?\} \rimg}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{PRE4}
+\allows{PRE4}{O1}
+
+\draschema{OS2}{
+\begin{schema}{CopiesRentedOut}
+\Xi VideoShop\\
+t?: TITLE\\
+copiesOut!: \nat
+\where
+\draline{PRE5}{t? \in \dom stockLevel}\\
+\draline{O2}{copiesOut! = \# (rented \rres \{t?\})}
+\end{schema}}
+
+\uses{OS2}{SS1}
+\requires{OS2}{PRE5}
+\allows{PRE5}{O2}
+
+\begin{zed}
+MESSAGE::= success | notMember | 
+notInStock | allCopiesOut  | alreadyRented |
+ nonPosStockLevel | tooManyRented | stillRented
+\end{zed}
+
+\draschema{OS3}{
+\begin{schema}{NotMember}
+\Xi VideoShop\\
+p?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE6}{p? \notin members} \\
+\draline{O3}{outcome! = notMember}
+\end{schema}}
+
+\uses{OS3}{SS1}
+\requires{OS3}{PRE6}
+\allows{PRE6}{O3}
+
+\draschema{OS4}{
+\begin{schema}{NotInStock}
+\Xi VideoShop\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+\draline{PRE7}{t? \notin \dom stockLevel}\\
+\draline{O4}{outcome! = notInStock}
+\end{schema}}
+
+\uses{OS4}{SS1}
+\requires{OS4}{PRE7}
+\allows{PRE7}{O4}
+
+\draschema{OS5}{
+\begin{schema}{AllCopiesOut}
+\Xi VideoShop\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+\draline{PRE8}{stockLevel~t? = \# (rented \rres \{t?\})}\\
+\draline{O5}{outcome! = allCopiesOut}
+\end{schema}}
+
+\uses{OS5}{SS1}
+\requires{OS5}{PRE8}
+\allows{PRE8}{O5}
+
+\draschema{OS6}{
+\begin{schema}{AlreadyRented}
+\Xi VideoShop\\
+p?: PERSON\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+\draline{PRE9}{p? \mapsto t? \in rented}\\
+\draline{O6}{outcome! = alreadyRented}
+\end{schema}}
+
+\uses{OS6}{SS1}
+\requires{OS6}{PRE9}
+\allows{PRE9}{O6}
+
+\draschema{OS7}{
+\begin{schema}{NonPosStockLevel}
+\Xi VideoShop\\
+t?: TITLE\\
+change?: \num \\
+outcome!: MESSAGE
+\where
+\draline{PRE10}{stockLevel~t? + change? \leq 0}\\
+\draline{O7}{outcome! = nonPosStockLevel}
+\end{schema}}
+
+\uses{OS7}{SS1}
+\requires{OS7}{PRE10}
+\allows{PRE10}{O7}
+
+\draschema{OS8}{
+\begin{schema}{TooManyRented}
+\Xi VideoShop\\
+t?: TITLE \\
+change?: \num \\
+outcome!: MESSAGE
+\where
+\draline{PRE11}{stockLevel~t? + change? < \# (rented \rres \{t?\})}\\
+\draline{O8}{outcome! = tooManyRented}
+\end{schema}}
+
+\uses{OS8}{SS1}
+\requires{OS8}{PRE11}
+\allows{PRE11}{O8}
+
+\draschema{OS9}{
+\begin{schema}{StillRented}
+\Xi VideoShop\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+\draline{PRE12}{t? \in \ran rented}\\
+\draline{O9}{outcome! = stillRented}
+\end{schema}}
+
+\uses{OS9}{SS1}
+\requires{OS9}{PRE12}
+\allows{PRE12}{O9}
+}
+
+\end{document}

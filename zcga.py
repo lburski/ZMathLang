@@ -20,9 +20,11 @@ global preface_constants
 global defined_constants
 global correct_preface_set_constants
 global spec
+global declaredtypes
 someset = []
 errorSet=[]
-declaredtypes = ["\\nat", "\\nat_1", 'power', 'pfun', '\\num']
+declaredtypes = ["dom", "rres", "set", "ran", "declaration", "term", "set", "expression",
+    "in", "iseq", "\\nat", "\\nat_1", 'power', 'pfun', '\\num', 'rel', 'times', 'fun', 'nat']
 Vs_set = []
 Vt_set = []
 dvar = []
@@ -40,6 +42,32 @@ correct_preface_set_constants = []
 global no_of_errors
 no_of_errors = 0
 spec = []
+
+def cleanstring(somestring):
+    if "\\plus" in somestring:
+        somestring = re.sub('\\\\plus', '', somestring)
+    if "term" in somestring:
+        somestring = re.sub('term', '', somestring)
+    if "\\" in somestring:
+        somestring = re.sub('\\\\', '', somestring)
+    if "{" in somestring:
+        somestring = re.sub('{', '', somestring)
+    if "}" in somestring:
+        somestring = re.sub('}', '', somestring)
+    if "set" in somestring:
+        somestring = re.sub('set', '', somestring)
+    if "dom " in somestring:
+        somestring = re.sub('dom ', '', somestring)
+    if "ran " in somestring:
+        somestring = re.sub('ran ', '', somestring)
+    if "(" in somestring:
+        somestring = re.sub('\(', '', somestring)
+    if "^" in somestring:
+        somestring = re.sub('\^[a-zA-Z0-9]+', '', somestring)
+    if "# " in somestring:
+        somestring = re.sub('# ', '', somestring)
+    return somestring
+            
 
 #def emptysomset():
     #return someset
@@ -129,21 +157,28 @@ def gammacorrect(specification):
 
 #Looks at the declarations, adds the sets which are declared into dvar and adds the correct
 #declarations into gamma        
-def set_declaration(specification):
+def set_declaration(specification):   
+    global dvar
+    global correct_sets     
     for a in specification:
+        #This line checks for a declaration which is declaring one set
         setdec = re.findall(r"(\\declaration{[ ]*\\set{(.*)}[ ]*:[ ]*\\expression{.*}})", a)
         if setdec:
-            for a, b in setdec:
-                if b not in dvar:
-                    dvar.append(b)
-                    dvar.append(b + "'")
-                    for x in dvar:
-                        correct_sets.append(x)
-                gamma.append(a)
+            setinset = re.findall(r"\\set{(.*?)}", a)
+            if setinset:
+                for eachset in setinset:
+                    if eachset not in dvar:
+                        dvar.append(eachset)
+                        dvar.append(eachset+ "'")
+                        correct_sets.append(eachset+ "'")
+                        correct_sets.append(eachset)
+                
 
 #Looks at the declarations, add's the terms's which are declared into dvar and adds the correct
 #declarations into gamma 
 def term_declaration(specification):
+    global dvar
+    global correct_sets
     termdeclarationcomp = re.compile(r"(\\declaration{[ ]*\\term{([!\?A-Za-z]*)}[ ]*:[ ]*\\expression{.*}})")
     for a in specification:
         termdec = re.findall(r"(\\declaration{[ ]*\\term{(.*)}[ ]*:[ ]*\\expression{.*?}})", a)
@@ -151,11 +186,12 @@ def term_declaration(specification):
             termdecinterm = re.findall(r"\\term{(.*?)}", a)
             if termdecinterm:
                 for eachterm in termdecinterm:
+                    eachterm = cleanstring(eachterm)
                     if eachterm not in dvar:
                         dvar.append(eachterm)
                         dvar.append(eachterm + "'")
-                        for x in dvar:
-                            correct_terms.append(x)
+                        correct_terms.append(eachterm)
+                        correct_terms.append(eachterm + "'")
         termdeclaration = termdeclarationcomp.search(a)
         if termdeclaration:
             if termdeclaration.group(1) not in gamma:
@@ -164,17 +200,22 @@ def term_declaration(specification):
                 
 
 #Looks at the defined type with parameters and adds the parameters into dvar
-#for example MESSAGE:== inStock | notInStock. Would add inStock and notInstock into dvar
+#for example MESSAGE::= inStock | notInStock. Would add inStock and notInstock into dvar
 #The rule for internal constant terms
 def int_cons_term(specification):
-    declaredsettypecomp = re.compile(r"\\set\{([A-Z]*)\}[ ]*::=[ ]*(\\term\{[\_a-z\\]*\} \|)+")
+    dotdotequalscomp = re.compile(r"\\set\{[a-zA-Z0-9]+\} *::= *((.|\n)*?)\\end")
+    #dotdotequalscomp = re.compile(r"(\\begin\{zed\}(.|\n)*?\\end\{zed\})")
+    entire_document = ""   
     for a in specification:
-        int_cons_term = declaredsettypecomp.search(a)
-        if int_cons_term:
-            terms = re.findall(r"\\term{([\_\!\?A-Za-z\\]*)}", a)
-            for word in terms:
-                dvar.append(word)
-                correct_terms.append(word)
+        entire_document+=a 
+        dotdotequals = dotdotequalscomp.findall(entire_document);
+    if dotdotequals:
+        for lineOfterms, newline in dotdotequals:
+            terms = re.findall(r"\\term{([\_\!\?A-Za-z\\]*)}", lineOfterms)
+            if terms:
+                for word in terms:
+                    dvar.append(word)
+                    correct_terms.append(word)
     return correct_terms
 
 #For every set variable found in the specification, it checks if it is in the declared variables
@@ -183,15 +224,18 @@ def variable_set(specification):
     global no_of_errors
     global errorSet
     global dvar
+    global defined_constants
+    global declaredtypes
     nondeclared = []
     vs_set(open(specification, "r"))
     set_declaration(open(specification, "r"))
     for a in Vs_set:
         if a not in dvar:
             if a not in defined_constants:
-                if a not in nondeclared:
-                    nondeclared.append(a)
-                    no_of_errors = no_of_errors + 1
+                if a not in declaredtypes:
+                    if a not in nondeclared:
+                        nondeclared.append(a)
+                        no_of_errors = no_of_errors + 1
                     
 
         else:
@@ -224,7 +268,7 @@ def variable_term(specification):
     if nondeclared:
         for n in nondeclared:
             errorSet.append(n)
-        someset.append(str(nondeclared)+" non declared terms\n")
+        someset.append(str(nondeclared)+" non declared termsaaaa\n")
     return correct_terms
 
 #Sometimes brackets are put around variables so we they should be allowed as well
@@ -254,13 +298,16 @@ def bracket_variables(specification):
 def internalconstant(specification):
     global declaredtypes
     global no_of_errors
+    global defined_constants
+    global dvar
     nondeclaredtypes = []
-    declaredtypecomp = re.compile(r"\[\\set\{([A-Z]*)\}\]")
-    declaredsettypecomp = re.compile(r"\\set\{([A-Z]*)\} *::= *(\\term\{[\_a-z\\]*\} *\|)+")
-    q = re.compile(r"\\set{([A-Z]+)} *::= *")
-    declaredmanytypecomp = re.compile(r"\[\\set{[A-Z]+}[, ~ \\set{[A-Z]*}]*\]")
+    declaredtypecomp = re.compile(r"\[\\set\{([a-zA-Z]*)\}\]")
+    declaredsettypecomp = re.compile(r"\\set\{([a-zA-Z]*)\} *::= *(\\term\{[\_a-zA-Z\\]*\} *\|)+")
+    q = re.compile(r"\\set{([A-Za-z]+)} *::= *")
+    declaredmanytypecomp = re.compile(r"\[\\set{[a-zA-Z]+}[, ~ \\set{[a-zA-Z]*}]*\]")
     declarationcomp1 = re.compile(r"\\declaration{[ ]*\\[terms]+{[!?A-Za-z]*}[ ]*:[ ]*\\expression{(.*)}}")
     definition(open(checking, "r"))
+    
 #Here we make sure gamma prime and definitions are in spec
     for eachdef in definitions:
         if eachdef not in spec:
@@ -280,7 +327,7 @@ def internalconstant(specification):
 #many times can be defined at once eg [STUDENT, MODULE] therefore this function finds all of
 #these types
         elif declaredmanytype:
-            x = re.findall(r"([A-Z]+)", a)
+            x = re.findall(r"([a-zA-Z]+)", a)
             if x:
                 for word in x:
                     declaredtypes.append(word)
@@ -288,6 +335,12 @@ def internalconstant(specification):
 #The constant terms which are defined are written in the rule int_cons_term
         if declaredsettype:
             declaredtypes.append(declaredsettype.group(1))
+        
+        if qz:
+            dotdotequalsset = qz.group(1)
+            #print dotdotequalsset
+            if dotdotequalsset not in declaredtypes:
+                declaredtypes.append(dotdotequalsset)
             
 #This checks if the types used in declarations are defined beforehand
         if setdeclaration1:
@@ -327,6 +380,7 @@ def internalconstant(specification):
                     for eachset in madetype4:
                         if (eachset not in declaredtypes):
                             if eachset not in dvar:
+                                
                                 nondeclaredtypes.append(eachset)
                                 no_of_errors = no_of_errors + 1 
                 else:
@@ -359,7 +413,8 @@ def fixpanthesis(a_word):
 
 def ext_constant_set(specification):
     global no_of_errors
-    set_declaration(open(checking, "r")) 
+    set_declaration(open(checking, "r"))
+    term_declaration(open(checking, "r")) 
     internalconstant(open(checking, "r"))
     for line in specification:
         sett = re.findall(r"\\set\{(.*?)\}", line)
@@ -510,15 +565,17 @@ def externaltospec(a, b):
 def definition(specification):
     global no_of_errors
     global errorSet
+    global defined_constants
     non_declared_variables = []
 #We make sure that a set is declared after the let
-    defintiontypecomp = re.compile(r"\\definition{\(?\$\\LET\$ *\\set\{([a-z]+)}")
+    defintiontypecomp = re.compile(r"\\definition{\(?\\\LET\ *\\set\{([a-z]+)}")
+    axiomdefinition = re.compile("r.sss")
     for line in specification:
         definitionline = defintiontypecomp.search(line)
         if definitionline:
             defcon = definitionline.group(1)
-            x = re.findall(r"\\set{\(?([a-z]+)}", line)
-            y = re.findall(r"\\set{([a-z]+)\$.*\$}", line)
+            x = re.findall(r"\\set{\(?([A-Za-z]+)}", line)
+            y = re.findall(r"\\set{([A-Za-z]+)\$.*\$}", line)
 #We make sure that all variables x_1, ..., x_n are in dvar
             if x and not defcon:
                 for every_variable in x:
@@ -578,6 +635,7 @@ def ext_constant_expression(specification):
                     elif x:
                         for a in x:
                             a = fixpanthesis(a)
+                            a = cleanstring(a)
                             if a not in correct_sets:
                                 errorSet.append(a)
                                 someset.append(str(a) +  " - not a correct set\n")
@@ -615,9 +673,23 @@ def ext_constant_expression(specification):
                     newx = re.findall(r"\\set{(.*?)}", newset)
                     if newx:
                         for eachset in newx:
-                            if eachset not in correct_sets:
-                                errorSet.append(eachset)
-                                someset.append(str(eachset) + " not a correct set\n")
+                            eachset = cleanstring(eachset)
+                            if eachset not in correct_terms:
+                                if (eachset not in correct_sets):
+                                    errorSet.append(eachset)
+                                    someset.append(str(eachset) + " not a correct set\n")
+                                    no_of_errors = no_of_errors + 1
+                    elif "^" in newset:
+                        if (cleanstring(newset)) not in correct_sets:
+                            errorSet.append(newset)
+                            someset.append(str(newset) + " not a correct set\n")
+                            no_of_errors = no_of_errors + 1
+                    elif "\\" in newset:
+                        newset = cleanstring(newset)
+                        if newset not in correct_sets:
+                            if newset not in correct_terms:
+                                errorSet.append(newset)
+                                someset.append(str(newset) + " not a correct set\n")
                                 no_of_errors = no_of_errors + 1
                     else:
                         errorSet.append(newset)
@@ -638,14 +710,21 @@ def ext_constant_expression(specification):
                     findtermsinterms = re.findall(r"\\term{(.*?)}", a)
                     if findtermsinterms:
                         for eachterms in findtermsinterms:
-                            if eachterms not in correct_terms:
+                            eachterms = cleanstring(eachterms)
+                            if (eachterms not in correct_terms):
+                                pass
+                            #fix this for pswitch
+                                if not eachterms.isdigit():
+                                    errorSet.append(eachterms)
+                                    someset.append(str(eachterms) + " not a correct term\n")
+                                    no_of_errors = no_of_errors + 1
+                    else:
+                        a = cleanstring(a)
+                        if a not in correct_terms:
+                            if a not in correct_sets:
                                 errorSet.append(a)
                                 someset.append(str(a) + " not a correct term\n")
                                 no_of_errors = no_of_errors + 1
-                    else:
-                        errorSet.append(a)
-                        someset.append(str(a) + " not a correct term\n")
-                        no_of_errors = no_of_errors + 1
                 if c not in correct_terms:
                     c = fixbrackets(c)
                     if c not in correct_terms:
@@ -698,7 +777,6 @@ def specCorrect(something):
     doall(something)
     if no_of_errors == 0:
         someset.append( "Spec Grammatically Correct\n")
-        #print "spec = ", spec
     else:
         someset.append("Spec Grammatically Incorrect\n")
         someset.append("Number of errors "+ str(no_of_errors))
@@ -729,7 +807,8 @@ def cleanValues():
     Vt_set=[]
     Vs_set=[]              
     dvar=[]
-    declaredtypes = ["\\nat", "\\nat_1", 'power', 'pfun', '\\num']
+    declaredtypes = ["dom", "rres", "set", "ran", "declaration", "term", "set", "expression",
+    "in", "iseq", "\\nat", "\\nat_1", 'power', 'pfun', '\\num', 'rel', 'times', 'fun', 'nat']
     gamma = []
     constant_sets = []
     constant_terms = []
@@ -750,24 +829,39 @@ def schemaNames(specification):
     global errorSet
     setNames = []
     declaredschemaName = r"\\begin\{schema\}\{(.+)\}"
+    defsSchemaNameString = r"([a-zA-Z0-9]+) *\\defs"
     namesInText = r"\\text\{((\\Delta|\\Xi)?[ ]*([\_\\a-zA-Z0-9]+))[ ]*\}"
+    doubleEqualsSchemaString = r"([a-zA-Z0-9\_\\]+) *=="
     checkName = re.compile(declaredschemaName)
     checkNameInText = re.compile(namesInText)
+    defsSchemaNameComp = re.compile(defsSchemaNameString)
+    doubleEqualsComp = re.compile(doubleEqualsSchemaString)
     for a in specification:
+        defsSchemaName = defsSchemaNameComp.search(a)
         declaredSname = checkName.search(a)
         nameInText = checkNameInText.search(a)
+        doubleEqualsSchemaName = doubleEqualsComp.search(a)
 #Adds all schemaNames into a list
         if declaredSname:
             setNames.append(declaredSname.group(1))
 #Adds the prime schema to the defined schemas
             setNames.append(declaredSname.group(1) + "'")
+#Adds the schemaNAme if the schema is made with defs operator
+        if defsSchemaName:
+            setNames.append(defsSchemaName.group(1))
+#Adds the SchemaName prime ' if the schema is made with defs operator
+            setNames.append(defsSchemaName.group(1) + "'")   
+#Adds the schemaName if the schema is made with a double equals
+        if doubleEqualsSchemaName:
+            setNames.append(doubleEqualsSchemaName.group(1))
+            setNames.append(doubleEqualsSchemaName.group(1)+"'")
 #Checks if all called schemas in schematext are actual defined schemas
         if nameInText:
             calledName = nameInText.group(3)
             if calledName not in setNames:
                 no_of_errors = no_of_errors + 1
                 errorSet.append(calledName)
-                someset.append(str(calledName) + " not a defined Schemas\n")
+                someset.append(str(calledName) + " not a defined Schema\n")
             else:
                 gamma.append(nameInText.group(1))
 def printoutput():
@@ -782,7 +876,12 @@ def errors():
 
 
 #checking = raw_input("Please type the specification which you would like to check: ")
-#checking = "zcga_vendingmachine.tex"
+#checking = "1.tex"
 #specCorrect(checking)
+#print " ".join(someset)
+#print correct_terms
+#print cleanstring("\\{\\term{off?")
+#print correct_terms
+#print dvar
 
 

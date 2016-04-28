@@ -1,0 +1,112 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T2}{0.25}{
+\begin{zed}
+[\set{STUDENT}]
+\end{zed}
+
+\draschema{A1}{
+\begin{axdef}
+\text{\declaration{\term{maxPlayers}: \expression{\nat}}}
+\where
+\text{\expression{\term{maxPlayers} = \term{20}}}
+\end{axdef}}
+
+\draschema{SS1}{
+\begin{schema}{ClubState}
+\text{\declaration{\set{badminton}: \expression{\power STUDENT}}}\\
+\text{\declaration{\set{hall}: \expression{\power STUDENT}}}
+\where
+\draline{SI1}{\text{\expression{\set{hall} \subseteq \set{badminton}}}\\
+\text{\expression{\term{\# \set{hall}} \leq \term{maxPlayers}}}}
+\end{schema}}
+
+\uses{SS1}{A1}
+\requires{SS1}{SI1}
+
+\draschema{SS2}{
+\begin{schema}{ClubState2}
+\text{ClubState}\\
+\text{\declaration{\set{onCourt}: \expression{\power STUDENT}}}\\
+\text{\declaration{\set{waiting}: \expression{\iseq STUDENT}}}
+\where
+\draline{SI2}{\text{\expression{\set{\langle \set{onCourt}, \set{\ran \set{waiting}} \rangle} \partition \set{hall}}}}
+\end{schema}}
+
+\requires{SS2}{SI2}
+\uses{SS2}{SS1}
+
+\draschema{IS1}{
+\begin{schema}{InitClubState2}
+\text{ClubState2}
+\where
+\draline{PO1}{\text{\expression{\set{badminton'} = \set{\{\}}}}}
+\end{schema}}
+
+\uses{IS1}{SS2}
+\requires{IS1}{PO1}
+\uses{IS1}{SS1}
+
+\draschema{CS1}{
+\begin{schema}{NewGame}
+\text{\Delta ClubState2}
+\where
+\draline{PRE1}{\text{\expression{\set{onCourt} = \set{\emptyset}}}\\
+\text{\expression{\term{\# \set{waiting}} \geq \term{2}}}\\
+\text{\expression{\expression{\term{\# \set{waiting}} \geq 
+\term{4}} \implies \expression{\term{\# \set{onCourt'}} = \term{4}}}}\\
+\text{\expression{\expression{\term{\# \set{waiting}} < 
+\term{4}} \implies \expression{(\term{\# \set{onCourt'}} = \term{2})}\\
+\lor \expression{(\term{\# \set{onCourt'}} = \term{3})}}}\\
+\text{\expression{\term{head~\set{waiting}} \in \set{onCourt'}}}}\\
+\draline{PO2}{\text{\expression{\set{onCourt'} \subseteq
+ \set{\ran (\set{\set{1\upto 6} \lhd \set{waiting}})}}}\\
+\text{\expression{\set{waiting'} = \set{\set{waiting} \project
+ ((\set{\set{\ran \set{waiting}}) \setminus \set{onCourt'}})}}}\\
+\text{\expression{\set{hall'} = \set{hall}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{FinishGame}
+\text{\Delta ClubState2}
+\where
+\draline{PRE2}{\text{\expression{\set{onCourt} \neq \set{\{\}}}}\\
+\text{\expression{\set{onCourt'} = \set{\{\}}}}}\\
+\draline{PO3}{\text{\expression{\exists \declaration{\set{s}:
+ \expression{\iseq STUDENT}} @ \\
+(\expression{\set{\ran \set{s}} = \set{onCourt}} \land
+ \expression{\set{waiting'} = \set{\set{waiting} \cat \set{s}})}}}\\
+\text{\expression{\set{hall'} = \set{hall}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\allows{PRE2}{PO3}
+\requires{CS2}{PRE2}
+
+\draschema{CS3}{
+\begin{schema}{LeaveHall}
+\text{\Delta ClubState2}\\
+\text{\declaration{\term{p?}: \expression{STUDENT}}}
+\where
+\draline{PRE3}{\text{\expression{\term{p?} \in \set{\ran \set{waiting}}}}}\\
+\draline{PO4}{\text{\expression{\set{waiting'} =
+ \set{squash(\set{\set{waiting} \nrres \set{\{\term{p?}\}}})}}}\\
+\text{\expression{\set{hall'} = \set{\set{hall} \setminus
+ \set{\{\term{p?}\}}}}}\\
+\text{\expression{\set{badminton'} = \set{badminton}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\allows{PRE3}{PO4}
+\requires{CS3}{PRE3}
+}
+
+\end{document}

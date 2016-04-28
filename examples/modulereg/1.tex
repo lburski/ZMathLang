@@ -1,0 +1,43 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[\set{PERSON}, \set{MODULE}]
+\end{zed}
+
+\begin{schema}{ModuleReg}
+\text{\declaration{\set{students}:\expression{\power PERSON}}}\\
+\text{\declaration{\set{degModules}:\expression{\power MODULE}}}\\
+\text{\declaration{\set{taking}:\expression{PERSON \rel MODULE}}}
+\where
+\text{\expression{\set{\dom \set{taking}} \subseteq \set{students}}}\\
+\text{\expression{\set{\ran \set{taking}}}\subseteq \set{degModules}}
+\end{schema}
+
+\begin{schema}{AddStudent}
+\text{\Delta ModuleReg}\\
+\text{\declaration{\term{p?}:\expression{PERSON}}}\\
+\where
+\text{\expression{\term{p?} \notin \set{students}}}\\
+\text{\expression{\set{students'} = \set{\set{students} \cup \set{\{\term{p?}\}}}}}\\
+\text{\expression{\set{degModules'} = \set{degModules}}}\\
+\text{\expression{\set{taking'} = \set{taking}}}
+\end{schema}
+
+\begin{schema}{RegForModule}
+\text{\Delta ModuleReg}\\
+\text{\declaration{\term{p?}: \expression{PERSON}}}\\
+\text{\declaration{\term{m?}: \expression{MODULE}}}
+\where
+\text{\expression{\term{p?} \in \set{students}}}\\
+\text{\expression{\term{m?} \in \set{degModules}}}\\
+\text{\expression{\term{\term{p?} \mapsto \term{m?}}
+\notin \set{taking}}}\\
+\text{\expression{\set{taking'} = \set{\set{taking} \cup
+\set{\{\term{\term{p?} \mapsto \term{m?}}\}}}}}\\
+\text{\expression{\set{students'} = \set{students}}}\\
+\text{\expression{\set{degModules'} = \set{degModules}}}
+\end{schema}
+
+\end{document}

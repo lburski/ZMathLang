@@ -1,0 +1,127 @@
+\documentclass{article}
+\usepackage{zed}
+\begin{document}
+
+\begin{zed}
+[STUDENT]
+\end{zed}
+
+\begin{axdef}
+maxPlayers: \nat
+\where
+maxPlayers = 20
+\end{axdef}
+
+\begin{schema}{ClubState}
+badminton:\power STUDENT\\
+hall: \power STUDENT
+\where
+hall \subseteq badminton\\
+\# hall \leq maxPlayers
+\end{schema}
+
+\begin{schema}{InitClubState}
+ClubState'
+\where
+badminton' = \{\}\\
+hall' = \{\}
+\end{schema}
+
+\begin{schema}{AddMember}
+\Delta ClubState \\
+newMember?: STUDENT
+\where
+newMember \notin badminton \\
+badminton' = badminton \cup \{newMember?\} \\
+hall' = hall
+\end{schema}
+
+\begin{schema}{RemoveMember}
+\Delta ClubState \\
+member?: STUDENT
+\where
+member? \in badminton \\
+badminton' = badminton \setminus \{member?\} \\
+hall' = hall \setminus \{member?\}
+\end{schema}
+
+\begin{schema}{EnterHall}
+\Delta ClubState \\
+enterer?: STUDENT
+\where
+enterer? \in badminton \\
+enterer? \notin hall\\
+\# hall < maxPlayers \\
+hall' = hall \cup \{enterer?\} \\
+badminton' = badminton
+\end{schema}
+
+\begin{schema}{LeaveHall}
+\Delta ClubState \\
+leaver?: STUDENT
+\where
+leaver? \in hall \\
+hall' = hall \setminus \{leaver?\} \\
+badminton' = badminton
+\end{schema}
+
+\begin{zed}
+MESSAGE ::= success| isMember | notMember | hallFull | inHall | notInHall
+\end{zed}
+
+\begin{zed}
+SuccessMessage \defs [outcome!: MESSAGE | outcome! = success]
+\end{zed}
+
+\begin{schema}{IsMember}
+\Xi ClubState \\
+newMember?: STUDENT \\
+outcome!: MESSAGE
+\where
+newMember? \in badminton \\
+outcome! = isMember
+\end{schema}
+
+\begin{schema}{NotMember}
+\Xi ClubState \\
+member?: STUDENT \\
+outcome!: MESSAGE
+\where
+member? \notin badminton \\
+outcome! = notMember
+\end{schema}
+
+\begin{schema}{AlreadyInHall}
+\Xi ClubState \\
+enterer?: STUDENT \\
+outcome!: MESSAGE
+\where
+enterer? \in hall \\
+outcome! = inHall
+\end{schema}
+
+\begin{schema}{HallFull}
+\Xi ClubState \\
+outcome!: MESSAGE
+\where
+\# hall = maxPlayers \\
+outcome! = hallFull
+\end{schema}
+
+\begin{schema}{NotInHall}
+\Xi ClubState \\
+leaver?: STUDENT\\
+outcome!: MESSAGE
+\where
+leaver? \notin hall \\
+outcome! = notInHall
+\end{schema}
+
+\begin{zed}
+TotalAddMember \defs (AddMember \land SuccessMessage) \lor IsMember \\
+TotalRemoveMember \defs (RemoveMember \land SuccessMessage) \lor NotMember \\
+TotalEnterHall \defs (EnterHall \land SuccessMessage) \lor NotMember \lor AlreadyInHall \lor HallFull \\
+TotalLeaveHall \defs (LeaveHall \land SuccessMessage) \lor NotInHall
+\end{zed}
+
+\end{document}

@@ -8,6 +8,9 @@ import totalise
 import networkx as nx
 import matplotlib.pyplot as plt
 from networkx.algorithms.cycles import cycle_basis, simple_cycles
+from networkx.drawing.nx_agraph import graphviz_layout
+import pylab
+from networkx.drawing.layout import _rescale_layout
 
 someset = []
 goto_graph = nx.DiGraph()
@@ -135,21 +138,27 @@ def createplot(somedoc):
     plt.close()
     return plt
 
-
 def showplot(someplot):
     someplot.show()
 
 def creatdepgraphplot(somedoc):
     newname = "dp_" + creatname(somedoc) +".png"
     #draws the dependency graph
-    pos=nx.graphviz_layout(dep_graph,prog='dot')
+    pos=nx.graphviz_layout(dep_graph, prog='fdp')
     nx.draw_networkx_edge_labels(dep_graph, pos, dep_edges, font_size=7)
     nx.draw(dep_graph, pos, node_size = 250, node_color = '#A0CBE2', arrows=True, with_labels=True, font_size=7)
-    #nx.draw_networkx(goto_graph, node_size = 999, node_color = 'm', arrows=True)
-    plt.title('Dependency Graph of ' + findtheory(somedoc) )
-    plt.axis('off')
-    plt.savefig(newname)
-    plt.close()
+    A = nx.to_agraph(dep_graph)
+    A.edge_attr.update(len=5)
+    A.layout()
+    A.draw(newname)
+
+    plt.figure(1,figsize=(2000,2000))
+    plt.savefig(newname, dpi = 1000)
+    plt.show()
+    #plt.title('Dependency Graph of ' + findtheory(somedoc) )
+    #plt.axis('off')
+    #plt.savefig(newname)
+    #plt.close()
     return plt
 
 def dependencygraph():
@@ -163,6 +172,10 @@ def creatname(doctoconvert):
         lastindexdot = max(indexsofdot)
         someothername = doctoconvert[lastindexslash + 1:lastindexdot] 
         newname = someothername
+    elif "." in doctoconvert:
+        indexsofdot = [i for i, ltr in enumerate(doctoconvert) if ltr == "."]
+        lastindexdot = max(indexsofdot)
+        newname = doctoconvert[:lastindexdot]
     else:
         newname = doctoconvert  
     return newname
@@ -208,7 +221,7 @@ def createskeleton_set():
 
     for allnodes in fromnodes:
         if allnodes not in tonodes:
-            if ("SS" in allnodes) and (allnodes not in orderofgraph):
+            if ("SS1" in allnodes) and (allnodes not in orderofgraph):
                 orderofgraph.append(allnodes)
             else:
                 numberinNode = hasNumbers(allnodes)
@@ -217,7 +230,9 @@ def createskeleton_set():
                         numbersInNopdes.append((eachNumber, allnodes))
     for (TheNumber, theNode) in sorted(numbersInNopdes):
         if theNode not in orderofgraph:
-            if "SS" in theNode or "A" in theNode:
+            if "DA" in theNode:
+                pass
+            elif "SS1" in theNode or "A" in theNode:
                 orderofgraph.append(theNode)
             
 #Remove the nodes which are not dependent on anything from the
@@ -280,6 +295,8 @@ def createskeleton_set():
             orderofgraph[indexofnode] = (eachpart, "lemma")
         elif "SI" in eachpart:
             orderofgraph[indexofnode] = (eachpart, "stateInvarients")
+        elif "DA" in eachpart:
+            orderofgraph[indexofnode] = (eachpart, "defintionAxiom")
         elif "A" in eachpart:
             orderofgraph[indexofnode] = (eachpart, "axiom")
     return orderofgraph
@@ -310,10 +327,12 @@ def findskeleton(somestring):
         newname = "skeleton_" +somestring+".txt"
     return newname
 
-#somedoc= ("/home/lb89/workspace/zdra/curries/zml_clubstate.tex")
-#somedoc ="fullexample.tex"
-#totalcheck(somedoc)
+#somedoc = "fullexample.tex"
+#somedoc = "text.tex"
+
+somedoc= ("/home/lb89/workspace/zdra/1n2.tex")
+totalcheck(somedoc)
+creatdepgraphplot(somedoc)
 #createplot(somedoc)
-#creatdepgraphplot(somedoc)
-#print(someset)
+#print creatname(somedoc)
 #print createskeleton_set()

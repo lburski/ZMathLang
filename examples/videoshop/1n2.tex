@@ -1,0 +1,245 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T4}{0.1}{
+\begin{zed}
+[\set{PERSON}]
+\end{zed}
+
+\begin{zed}
+[\set{TITLE}]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{VideoShop}
+\text{\declaration{\set{members}: \expression{\power PERSON}}}\\
+\text{\declaration{\set{rented}: \expression{PERSON \rel TITLE}}}\\
+\text{\declaration{\set{stockLevel}: \expression{TITLE \pfun \nat_1}}}
+\where
+\draline{SI1}{\text{\expression{\set{\dom \set{rented}} \subseteq \set{members}}}\\
+\text{\expression{\set{\ran \set{rented}} \subseteq \set{\dom \set{stockLevel}}}}\\
+\text{\expression{\forall \declaration{\term{t}: \expression{\ran rented}} @
+\expression{\term{\# (\set{\set{rented} \rres 
+\set{\{\term{t}\}}})} \leq \term{\set{stockLevel}~\term{t}}}}}}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitVideoShop}
+\text{VideoShop'}
+\where
+\draline{PO1}{\text{\expression{\set{members'} = \set{\{\}}}}\\
+\text{\expression{\set{stockLevel'} = \set{\{\}}}}}
+\end{schema}}
+
+\uses{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{RentVideo}
+\text{\Delta VideoShop}\\
+\text{\declaration{\term{p?}: \expression{PERSON}}}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}
+\where
+\draline{PRE1}{\text{\expression{\term{p?} \in \set{members}}}\\
+\text{\expression{\term{t?} \in \set{\dom \set{stockLevel}}}}\\
+\text{\expression{\term{\set{stockLevel}~\term{t?}} > 
+\term{\# (\set{\set{rented} \rres \set{\{\term{t?}\}}})}}}\\
+\text{\expression{\term{\term{p?} \mapsto \term{t?}} \notin \set{rented}}}}\\
+\draline{PO2}{\text{\expression{\set{rented'}= 
+\set{\set{rented} \cup \set{\{\term{\term{p?} \mapsto \term{t?}}\}}}}}\\
+\text{\expression{\set{stockLevel'} = \set{stockLevel}}}\\
+\text{\expression{\set{members'} = \set{members}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{ChangeStockLevel}
+\text{\Delta VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{change?}}: \expression{\num}}
+\where
+\draline{PRE2}{\text{\expression{\term{t?} \in
+ \set{\dom \set{stockLevel}}}}\\
+\text{\expression{\term{\term{\set{stockLevel}~\term{t?}} + \term{change?}}} > \term{0}}\\
+\text{\expression{\term{\term{\set{stockLevel}~\term{t?}} +
+ \term{change?}} \geq (\term{\# (\set{\set{rented} \rres \set{\{\term{t?}\}}}}))}}}\\
+\draline{PO3}{\text{\expression{\set{stockLevel'} = 
+\set{\set{stockLevel} \oplus 
+\set{\{\term{\term{\term{t?} \mapsto \term{\set{stockLevel}~\term{t?}}} + 
+\term{change?}}}\}}}}\\
+\text{\expression{\set{rented'} = \set{rented}}}\\
+\text{\expression{\set{members'} = \set{members}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{DeleteTitle}
+\text{\Delta VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}
+\where
+\draline{PRE3}{\text{\expression{\term{t?} \notin \set{\ran \set{rented}}}}\\
+\text{\expression{\term{t?} \in \set{\dom \set{stockLevel}}}}}\\
+\draline{PO4}{\text{\expression{\set{stockLevel'} =
+ \set{\set{\{\term{t?}\}} \ndres \set{stockLevel}}}}\\
+\text{\expression{\set{members'} = \set{members}}}\\
+\text{\expression{\set{rented'} = \set{rented}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{OS1}{
+\begin{schema}{TitlesOut}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{p?}: \expression{PERSON}}}\\
+\text{\declaration{\set{titles!}: \expression{\power TITLE}}}
+\where
+\draline{PRE4}{\text{\expression{\term{p?} \in \set{members}}}}\\
+\draline{O1}{\text{\expression{\set{titles!} = 
+\set{\set{rented} \set{\limg \set{\{\term{p?}\}} \rimg}}}}}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{PRE4}
+\allows{PRE4}{O1}
+
+\draschema{OS2}{
+\begin{schema}{CopiesRentedOut}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{copiesOut!}: \expression{\nat}}}
+\where
+\draline{PRE5}{\text{\expression{\term{t?} \in \set{\dom \set{stockLevel}}}}}\\
+\draline{O2}{\text{\expression{\term{copiesOut!} =
+ \term{\# (\set{\set{rented} \rres \set{\{\term{t?}\}}})}}}}
+\end{schema}}
+
+\uses{OS2}{SS1}
+\requires{OS2}{PRE5}
+\allows{PRE5}{O2}
+
+\begin{zed}
+\set{MESSAGE}::= \term{success} | \term{notMember} | 
+\term{notInStock} | \term{allCopiesOut}  | \term{alreadyRented} |
+ \term{nonPosStockLevel} | \term{tooManyRented} | \term{stillRented}
+\end{zed}
+
+\draschema{OS3}{
+\begin{schema}{NotMember}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{p?}: \expression{PERSON}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE6}{\text{\expression{\term{p?} \notin \set{members}}}}\\
+\draline{O3}{\text{\expression{\term{outcome!} = \term{notMember}}}}
+\end{schema}}
+
+\uses{OS3}{SS1}
+\requires{OS3}{PRE6}
+\allows{PRE6}{O3}
+
+\draschema{OS4}{
+\begin{schema}{NotInStock}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE7}{\text{\expression{\term{t?} \notin
+ \set{\dom \set{stockLevel}}}}}\\
+\draline{O4}{\text{\expression{\term{outcome!} = \term{notInStock}}}}
+\end{schema}}
+
+\uses{OS4}{SS1}
+\requires{OS4}{PRE7}
+\allows{PRE7}{O4}
+
+\draschema{OS5}{
+\begin{schema}{AllCopiesOut}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE8}{\text{\expression{\term{\set{stockLevel}~\term{t?}}=
+ \term{\# (\set{\set{rented} \rres \set{\{\term{t?}\}}})}}}}\\
+\draline{O5}{\text{\expression{\term{outcome!} = \term{allCopiesOut}}}}
+\end{schema}}
+
+\uses{OS5}{SS1}
+\requires{OS5}{PRE8}
+\allows{PRE8}{O5}
+
+\draschema{OS6}{
+\begin{schema}{AlreadyRented}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{p?}: \expression{PERSON}}}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE9}{\text{\expression{\term{\term{p?} \mapsto \term{t?}}
+ \in \set{rented}}}}\\
+\draline{O6}{\text{\expression{\term{outcome!} =
+ \term{alreadyRented}}}}
+\end{schema}}
+
+\uses{OS6}{SS1}
+\requires{OS6}{PRE9}
+\allows{PRE9}{O6}
+
+\draschema{OS7}{
+\begin{schema}{NonPosStockLevel}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{change?}: \expression{\num}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE10}{\text{\expression{\term{\term{\set{stockLevel}~\term{t?}} +
+ \term{change?}} \leq \term{0}}}}\\
+\draline{O7}{\text{\expression{\term{outcome!} = \term{nonPosStockLevel}}}}
+\end{schema}}
+
+\uses{OS7}{SS1}
+\requires{OS7}{PRE10}
+\allows{PRE10}{O7}
+
+\draschema{OS8}{
+\begin{schema}{TooManyRented}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{change?}: \expression{\num}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE11}{\text{\expression{\term{\term{\set{stockLevel}~\term{t?}} +
+ \term{change?}} < \term{\# (\set{\set{rented} \rres \set{\{\term{t?}\}}})}}}}\\
+\draline{O8}{\text{\expression{\term{outcome!} = \term{tooManyRented}}}}
+\end{schema}}
+
+\uses{OS8}{SS1}
+\requires{OS8}{PRE11}
+\allows{PRE11}{O8}
+
+\draschema{OS9}{
+\begin{schema}{StillRented}
+\text{\Xi VideoShop}\\
+\text{\declaration{\term{t?}: \expression{TITLE}}}\\
+\text{\declaration{\term{outcome!}: \expression{MESSAGE}}}
+\where
+\draline{PRE12}{\text{\expression{\term{t?} \in \set{\ran \set{rented}}}}}\\
+\draline{O9}{\text{\expression{\term{outcome!} = \term{stillRented}}}}
+\end{schema}}
+
+\uses{OS9}{SS1}
+\requires{OS9}{PRE12}
+\allows{PRE12}{O9}
+}
+
+\end{document}

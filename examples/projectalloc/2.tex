@@ -1,0 +1,293 @@
+\begin{verbatim}
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T6}{0.14}{
+\begin{zed}
+[PERSON]
+\end{zed}
+
+\begin{zed}
+[TOPIC]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{ProjectAlloc}
+studInterests, lecInterests: PERSON \pfun\iseq TOPIC\\
+allocation: PERSON \pfun PERSON\\
+maxPlaces: PERSON \pfun \nat
+\where
+\draline{SI1}{\dom studInterests \cap \dom lecInterests = \{\}\\
+\dom allocation \subseteq \dom studInterests\\
+\ran allocation \subseteq \dom lecInterests\\
+\dom maxPlaces = \dom lecInterests\\
+\forall lec: \dom maxPlaces\\
+@ \# (allocation \rres \{lec\}) \leq maxPlaces~lec}
+\end{schema}}
+
+\draschema{IS1}{
+\begin{schema}{InitProjectAlloc}
+ProjectAlloc
+\where
+\draline{PO1}{lecInterests' = \{\}\\
+studInterests' = \{\}}
+\end{schema}}
+
+\requires{IS1}{PO1}
+\uses{IS1}{SS1}
+
+\draschema{CS1}{
+\begin{schema}{AddStudent}
+\Delta ProjectAlloc\\
+s?: PERSON\\
+ts?: \iseq TOPIC
+\where
+\draline{PRE1}{s? \notin \dom studInterests \cup \dom lecInterests}\\
+\draline{PO2}{studInterests' = studInterests \cup \{s? \mapsto ts?\}\\
+lecInterests' = lecInterests\\
+allocation' = allocation\\
+maxPlaces' = maxPlaces}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{AddLecturer}
+\Delta ProjectAlloc\\
+l?: PERSON\\
+ts?: \iseq TOPIC\\
+maxAlloc?: \nat_1
+\where
+\draline{PRE2}{l? \notin \dom studInterests \cup \dom lecInterests}\\
+\draline{PO3}{lecInterests' = lecInterests \cup \{l? \mapsto ts?\}\\
+maxPlaces' = maxPlaces \cup \{l? \mapsto maxAlloc?\}\\
+studInterests' = studInterests\\
+allocation' = allocation}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{Allocate}
+\Delta ProjectAlloc\\
+s? : PERSON
+\where
+\draline{PRE3}{s? \in \dom studInterests\\
+s? \notin \dom allocation}\\
+\draline{PO4}{\exists sup: \dom lecInterests; t: TOPIC; i,j: \nat\\
+| maxPlaces~sup > \#(allocation \rres \{sup\})\\
+\land i \mapsto t \in studInterests~s?\\
+\land j \mapsto t \in lecInterests~sup\\
+@ (\\
+\forall lec: \dom lecInterests; k: \nat | maxPlaces~lec > \# (allocation \rres \{lec\}) \\
+@ ( \\
+(k \mapsto t \in lecInterests~lec \implies k \geq j)\\
+\land \\
+(\ran (1\upto i-1 \dres studInterests~s?) \\
+\cap \ran (lecInterests~lec) = \{\}))\\
+\land \\
+allocation' = allocation \cup \{s? \mapsto sup\}\\
+)\\
+studInterests' = studInterests\\
+lecInterests' = lecInterests}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{CS4}{
+\begin{schema}{DeAllocate}
+\Delta ProjectAlloc\\
+s?: PERSON
+\where
+\draline{PO5}{\exists sup: \dom lecInterests\\
+@ (s? \mapsto sup \in allocation\\
+\land allocation' = allocation \setminus \{s? \mapsto sup\})\\
+studInterests' = studInterests\\
+lecInterests' = lecInterests}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PO5}
+
+\draschema{CS5}{
+\begin{schema}{RemoveLecsTopic}
+\Delta ProjectAlloc\\
+l?: PERSON\\
+t?: TOPIC
+\where
+\draline{PRE4}{l? \in \dom lecInterests\\
+t? \in \ran (lecInterests~l?)}\\
+\draline{PO6}{lecInterests' = \\
+ lecInterests \oplus \\
+\{l? \mapsto squash~(lecInterests~l? \nrres\{t?\})\}\\
+studInterests' =studInterests\\
+allocation'=allocation}
+\end{schema}}
+
+\uses{CS5}{IS1}
+\requires{CS5}{PRE4}
+\allows{PRE4}{PO6}
+
+\draschema{OS1}{
+\begin{schema}{LecsAvailable}
+\Xi ProjectAlloc\\
+t?: TOPIC\\
+ps!: \power PERSON
+\where
+\draline{O1}{ps! = \\
+\{p: \dom lecInterests | t? \in \ran (lecInterests~p)\\
+\land maxPlaces~p > \# (allocation \rres \{p\})\}}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{O1}
+
+\begin{zed}
+MESSAGE::= success | isStudent | isLecturer | notStudent | isAllocated | noLecAvailable | notAllocated | notLecturer | notListedTopic
+\end{zed}
+
+\draschema{OS2}{
+\begin{zed}
+SuccessMessage \defs [outcome!: MESSAGE |\draline{O2}{outcome! = success}]
+\end{zed}}
+
+\draschema{OS3}{
+\begin{schema}{IsStudent}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE5}{s? \in \dom studInterests}\\
+\draline{O3}{outcome! = isStudent}
+\end{schema}}
+
+\uses{OS3}{SS1}
+\requires{OS3}{PRE5}
+\allows{PRE5}{O3}
+
+\draschema{OS4}{
+\begin{schema}{IsLecturer}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE6}{s? \in \dom lecInterests}\\
+\draline{O4}{outcome! = isLecturer}
+\end{schema}}
+
+\uses{OS4}{SS1}
+\requires{OS4}{PRE6}
+\allows{PRE6}{O4}
+
+\draschema{OS5}{
+\begin{schema}{NotStudent}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE7}{s? \notin \dom studInterests}\\
+\draline{O5}{outcome! = notStudent}
+\end{schema}}
+
+\uses{OS5}{SS1}
+\requires{OS5}{PRE7}
+\allows{PRE7}{O5}
+
+\draschema{OS6}{
+\begin{schema}{IsAllocated}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE8}{s? \notin \dom allocation}\\
+\draline{O6}{outcome! = isAllocated}
+\end{schema}}
+
+\uses{OS6}{SS1}
+\requires{OS6}{PRE8}
+\allows{PRE8}{O6}
+
+\draschema{OS7}{
+\begin{schema}{NoLecsAvailable}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{O7}{
+\neg (\exists sup:\dom lecInterests @ \\
+maxPlaces~sup > \# (allocation \rres \{sup\})\\
+\land \\
+\ran (studInterests~s?) \cap \ran (lecInterests~sup) \neq \{\})\\
+outcome!=noLecAvailable}
+\end{schema}}
+
+\uses{OS7}{SS1}
+\requires{OS7}{O7}
+
+\draschema{OS8}{
+\begin{schema}{NotAllocated}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE9}{s? \notin \dom allocation}\\
+\draline{O8}{outcome!=notAllocated}
+\end{schema}}
+
+\uses{OS8}{SS1}
+\requires{OS8}{PRE9}
+\allows{PRE9}{O8}
+
+\draschema{OS9}{
+\begin{schema}{NoLecturer}
+\Xi ProjectAlloc\\
+l?: PERSON\\
+outcome!: MESSAGE
+\where
+\draline{PRE10}{l? \notin \dom lecInterests}\\
+\draline{O9}{outcome! = notLecturer}
+\end{schema}}
+
+\uses{OS9}{SS1}
+\requires{OS9}{PRE10}
+\allows{PRE10}{O9}
+
+\draschema{OS10}{
+\begin{schema}{NotListedTopic}
+\Xi ProjectAlloc\\
+l?: PERSON\\
+t?: TOPIC\\
+outcome!: MESSAGE
+\where
+\draline{PRE11}{t? \notin \ran (lecInterests~l?)}\\
+\draline{O10}{outcome! = notListedTopic}
+\end{schema}}
+
+\uses{OS10}{SS1}
+\requires{OS10}{PRE11}
+\allows{PRE11}{O10}
+
+\draschema{OS11}{
+\begin{schema}{SupsDiffer}
+\Delta ProjectAlloc\\
+s?: PERSON
+\where
+\draline{O11}{\exists old, new: \dom lecInterests\\
+@ (s? \mapsto old \in allocation \land \\
+s? \mapsto new \in allocation' \land \\
+old \neq new)}
+\end{schema}}
+
+\uses{OS11}{SS1}
+\requires{OS11}{O11}
+}
+
+\end{document}
+\end{verbatim}

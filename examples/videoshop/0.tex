@@ -1,0 +1,167 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[PERSON]
+\end{zed}
+
+\begin{zed}
+[TITLE]
+\end{zed}
+
+\begin{schema}{VideoShop}
+members: \power PERSON \\
+rented: PERSON \rel TITLE \\
+stockLevel: TITLE \pfun \nat_1
+\where
+\dom rented \subseteq members \\
+\ran rented \subseteq \dom stockLevel \\
+\forall t: \ran rented @
+\# (rented \rres \{t\}) \leq stockLevel~t
+\end{schema}
+
+\begin{schema}{InitVideoShop}
+VideoShop'
+\where
+members' = \{\} \\
+stockLevel' = \{\}
+\end{schema}
+
+\begin{schema}{RentVideo}
+\Delta VideoShop\\
+p?: PERSON \\
+t?: TITLE
+\where
+p? \in members \\
+t? \in \dom stockLevel \\
+stockLevel~t? > \# (rented \rres \{t?\}) \\
+p? \mapsto t? \notin rented\\
+rented' = rented \cup \{p? \mapsto t?\} \\
+stockLevel' = stockLevel\\
+members' = members
+\end{schema}
+
+\begin{schema}{ChangeStockLevel}
+\Delta VideoShop \\
+t?: TITLE \\
+change?: \num
+\where
+t? \in \dom stockLevel\\
+stockLevel~t? + change? > 0 \\
+stockLevel~t? + change? \geq (\# (rented \rres \{t?\})) \\
+stockLevel' = stockLevel \oplus \{t? \mapsto stockLevel~t? + change?\} \\
+rented' = rented\\\
+members' = members
+\end{schema}
+
+\begin{schema}{DeleteTitle}
+\Delta VideoShop \\
+t?: TITLE
+\where
+t? \notin \ran rented\\
+t? \in \dom stockLevel\\
+stockLevel' = \{t?\} \ndres stockLevel\\
+members' = members\\
+rented' = rented
+\end{schema}
+
+
+\begin{schema}{TitlesOut}
+\Xi VideoShop \\
+p?: PERSON\\
+titles!: \power TITLE
+\where
+p? \in members \\
+titles! = rented \limg \{p?\} \rimg
+\end{schema}
+
+\begin{schema}{CopiesRentedOut}
+\Xi VideoShop\\
+t?: TITLE\\
+copiesOut!: \nat
+\where
+t? \in \dom stockLevel\\
+copiesOut! = \# (rented \rres \{t?\}
+\end{schema}
+
+\begin{schema}{CopiesInShop}
+CopiesRentedOut
+copiesIn!: \nat
+\where
+t? \in \dom stockLevel\\
+copiesIn! = stockLevel~t? - copiesOut
+\end{schema}
+
+\begin{zed}
+MESSAGE::= success | notMember | notInStock | 
+allCopiesOut | alreadyRented | nonPosStockLevel | tooManyRented | stillRented
+\end{zed}
+
+\begin{schema}{NotMember}
+\Xi VideoShop\\
+p?: PERSON\\
+outcome!: MESSAGE
+\where
+p? \notin members \\
+outcome! = notMember
+\end{schema}
+
+\begin{schema}{NotInStock}
+\Xi VideoShop\\
+t?: TITLE \\
+outcome!: MESSAGE
+\where
+t? \notin \dom stockLevel \\
+outcome! = notInStock
+\end{schema}
+
+\begin{schema}{AllCopiesOut}
+\Xi VideoShop\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+stockLevel~t?= \# (rented \rres \{t?\})\\
+outcome! = allCopiesOut
+\end{schema}
+
+\begin{schema}{AlreadyRented}
+\Xi VideoShop \\
+p?: PERSON \\
+t?: TITLE \\
+outcome!: MESSAGE
+\where
+p? \mapsto t? \in rented \\
+outcome! = alreadyRented
+\end{schema}
+
+\begin{schema}{NonPosStockLevel}
+\Xi VideoShop \\
+t?: TITLE \\
+change?: \num \\
+outcome!: MESSAGE
+\where
+stockLevel~t? + change? \leq 0 \\
+outcome! = nonPosStockLevel
+\end{schema}
+
+\begin{schema}{TooManyRented}
+\Xi VideoShop\\
+t?: TITLE\\
+change?: \num\\
+outcome!: MESSAGE
+\where
+stockLevel~t? + change? < \# (rented \rres \{t?\})\\
+outcome! = tooManyRented
+\end{schema}
+
+\begin{schema}{StillRented}
+\Xi VideoShop\\
+t?: TITLE\\
+outcome!: MESSAGE
+\where
+t? \in \ran rented\\
+outcome! = stillRented
+\end{schema}
+
+\end{document}

@@ -1,0 +1,74 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\begin{zed}
+[STUDENT]
+\end{zed}
+
+
+\begin{axdef}
+maxPlayers: \nat
+\where
+maxPlayers = 20
+\end{axdef}
+
+\begin{schema}{ClubState}
+badminton: \power STUDENT\\
+hall: \power STUDENT
+\where
+hall \subseteq badminton\\
+\# hall \leq maxPlayers
+\end{schema}
+
+\begin{schema}{ClubState2}
+ClubState\\
+onCourt: \power STUDENT\\
+waiting: \iseq STUDENT
+\where
+\langle onCourt, \ran waiting \rangle \partition hall
+\end{schema}
+
+\begin{schema}{InitClubState2}
+ClubState2
+\where
+badminton' = \{\}
+\end{schema}
+
+\begin{schema}{NewGame}
+\Delta ClubState2
+\where
+onCourt = \emptyset\\
+\# waiting \geq 2\\
+\# waiting \geq 4 \implies \# onCourt' = 4\\
+\# waiting < 4 \implies (\# onCourt' = 2\\
+\lor (\# onCourt' = 3)\\
+head~waiting \in onCourt'\\
+onCourt' \subseteq \ran (1\upto 6 \lhd waiting)\\
+waiting' = waiting \project ((ran waiting) \setminus onCourt')\\
+hall' = hall\\
+badminton' = badminton
+\end{schema}
+
+\begin{schema}{FinishGame}
+\Delta ClubState2
+\where
+onCourt \neq \{\}\\
+onCourt' = \{\}\\
+\exists s: \iseq STUDENT @ \\
+(\ran s = onCourt \land waiting' = waiting \cat s)\\
+hall' = hall\\
+badminton' = badminton
+\end{schema}
+
+\begin{schema}{LeaveHall}
+\Delta ClubState2\\
+p?: STUDENT
+\where
+p? \in \ran waiting \\
+waiting' = squash~(waiting \nrres\{p?\})\\
+hall' = hall \setminus \{p?\}\\
+badminton' = badminton
+\end{schema}
+
+\end{document}

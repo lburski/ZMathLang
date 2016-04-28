@@ -1,0 +1,124 @@
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T5}{0.2}{
+\begin{zed}
+[\set{STUDENT}, \set{MODULE}, \set{TIMESLOT}, \set{ROOM}]
+\end{zed}
+
+\draschema{A1}{
+\begin{gendef}[X, Y, Z]
+\text{\declaration{\set{allPairs}: \expression{(X \pfun ( Y \rel Z) \fun (Y \rel Z)}}}
+\where
+\text{\expression{\forall \declaration{\term{f}: \expression{(X \pfun (Y \rel Z))}} @ \\
+\expression{\set{\set{allPairs}~\term{f}} = \\ \set{\bigcup \set{\{\declaration{\term{x}: \expression{X}} | \expression{\term{x} \in \set{\dom f}} @ \term{\term{f}\term{x}}\}}}}}}
+\end{gendef}}
+
+
+\draschema{SS1}{
+\begin{schema}{Timetable}
+\text{\declaration{\set{studentTT}: \expression{STUDENT \pfun (TIMESLOT \pfun ROOM)}}}\\
+\text{\declaration{\set{moduleTT}: \expression{MODULE \pfun (TIMESLOT \rel ROOM)}}}
+\where
+\draline{SI1}{\text{\expression{\forall \declaration{\term{r}, \term{s}: \expression{\ran moduleTT}} @ \\
+\expression{\set{\disjoint \set{\langle \term{r}, \term{s} \rangle}}\\
+{}\\
+allPairs~studentTT \subseteq allPairs~moduleTT}}}\\
+{}\\
+\text{\expression{\forall \declaration{\term{s}: \expression{\dom studentTT}}; 
+\declaration{\term{m}: \expression{\dom moduleTT}}\\
+@ \expression{\expression{(\set{\set{\set{studentTT}~\term{s}} \cap \set{\set{moduleTT}~\term{m}}}) \neq \set{\emptyset}} \implies\\
+\expression{\set{\dom (\set{\set{studentTT}~\term{s}} \cap \set{\set{moduleTT}~\term{m}}}) = \set{\dom \set{(\set{moduleTT}~\term{m}})}}}}}}
+\end{schema}}
+
+\uses{SS1}{A1}
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitTimetable}
+\text{Timetable'}
+\where
+\draline{PO1}{\text{\expression{\set{studentTT'} = \set{\{\}}}}\\
+\text{\expression{\set{moduleTT'}= \set{\{\}}}}}
+\end{schema}}
+
+\uses{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{AddStudent}
+\text{\Delta Timetable}\\
+\text{\term{s?}: \expression{STUDENT}}
+\where
+\draline{PRE1}{\text{\expression{\term{s?} \notin \set{\dom \set{studentTT}}}}}\\
+\draline{PO2}{\text{\expression{\set{studentTT'} = \set{\set{studentTT} \cup \set{\{\term{\term{s?} \mapsto \set{\emptyset}}\}}}}}\\
+\text{\expression{\set{moduleTT'} = \set{moduleTT}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{ScheduleModule}
+\text{\Delta Timetable}\\
+\text{\declaration{\term{m?}: \expression{MODULE}}}
+\where
+\draline{PRE2}{\text{\expression{\term{m?} \in \set{\dom \set{moduleTT}}}}\\
+\text{\expression{\set{\set{moduleTT}~\term{m?}} = \set{\emptyset}}}} \\
+\draline{PO3}{\text{\expression{\exists \declaration{\set{schedule}: \expression{TIMESLOT \rel ROOM}} @ \\
+\expression{\expression{(\expression{\set{\set{\set{allPairs}~\set{moduleTT}} \cap \set{schedule}} = \set{\emptyset}} \\
+\land \expression{\set{moduleTT'} = \set{\set{moduleTT} \oplus \set{\{\term{\term{m?} \mapsto \set{schedule}}\}}}})}}}}\\
+\text{\expression{\set{studentTT'} = \set{studentTT}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\uses{CS2}{A1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+\draschema{CS3}{
+\begin{schema}{DescheduleModule}
+\text{\Delta Timetable}\\
+\text{\declaration{\term{m?}: \expression{MODULE}}}
+\where
+\draline{PRE3}{\text{\expression{\term{m?} \in \set{\dom \set{moduleTT}}}}\\
+\text{\expression{\set{\set{moduleTT}~\term{m?}} \neq \set{\emptyset}}}}\\
+\draline{PO4}{\text{\expression{\set{moduleTT'} = \set{\set{moduleTT} \oplus \set{\{\term{\term{m?} \mapsto \set{\emptyset}}\}}}}} \\
+\text{\expression{\set{studentTT'} = \\
+\set{\bigcup \set{\{\declaration{\term{s}: \expression{\dom studentTT}} @ \\
+ \expression{\set{\{\term{\term{s} \mapsto (\set{\set{\set{studentTT}~\term{s}} \setminus \set{\set{moduleTT}~\term
+{m?}}}) \} \}}}}}}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+\draschema{CS4}{
+\begin{schema}{RegForModule}
+\text{\Delta Timetable}\\
+\text{\declaration{\term{s?}: \expression{STUDENT}}}\\
+\text{\declaration{\term{m?}: \expression{MODULE}}}
+\where
+\draline{PRE4}{\text{\expression{\term{s?} \in \set{\dom \set{studentTT}}}}\\
+\text{\expression{\term{m?} \in \set{\dom \set{moduleTT}}}}\\
+\text{\expression{\set{\set{moduleTT}~\term{m?}} \neq \set{\emptyset}}} \\
+\text{\expression{\set{\set{\dom (\set{\set{studentTT}~\term{s?}})} \cap \set{\dom (\set{\set{moduleTT}~\term{m?}})}} \neq \set{\emptyset}}}} \\
+{}\\
+\draline{PO5}{\text{\expression{\exists \declaration{\set{newPairs}: \expression{TIMESLOT \pfun ROOM}} \\
+@ \\
+\expression{(\expression{(\set{\dom \set{newPairs}} = \set{\dom \set{\set{moduleTT}~\term{m?}}})}\\
+\land \expression{(\set{newPairs} \subseteq \set{\set{moduleTT}~\term{m?}})}\\
+\land \expression{(\set{studentTT'} = \\
+ \set{\set{studentTT} \oplus \set{\{\term{s?} \mapsto \set{\set{\set{studentTT}~\term{s?}} \cup \set{newPairs}} \}}})})}}}\\
+{}\\
+\text{\expression{\set{moduleTT'} = \set{moduleTT}}}}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PRE4}
+\allows{PRE4}{PO5}
+}
+\end{document}

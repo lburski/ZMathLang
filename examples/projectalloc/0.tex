@@ -1,0 +1,216 @@
+\begin{verbatim}
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+
+\begin{zed}
+[PERSON]
+\end{zed}
+
+\begin{zed}
+[TOPIC]
+\end{zed}
+
+\begin{schema}{ProjectAlloc}
+studInterests, lecInterests: PERSON \pfun\iseq TOPIC\\
+allocation: PERSON \pfun PERSON\\
+maxPlaces: PERSON \pfun \nat
+\where
+\dom studInterests \cap \dom lecInterests = \{\}\\
+\dom allocation \subseteq \dom studInterests\\
+\ran allocation \subseteq \dom lecInterests\\
+\dom maxPlaces = \dom lecInterests\\
+\forall lec: \dom maxPlaces\\
+@ \# (allocation \rres \{lec\}) \leq maxPlaces~lec
+\end{schema}
+
+
+\begin{schema}{InitProjectAlloc}
+ProjectAlloc
+\where
+lecInterests' = \{\}\\
+studInterests' = \{\}
+\end{schema}
+
+\begin{schema}{AddStudent}
+\Delta ProjectAlloc\\
+s?: PERSON\\
+ts?: \iseq TOPIC
+\where
+s? \notin \dom studInterests \cup \dom lecInterests\\
+studInterests' = studInterests \cup \{s? \mapsto ts?\}\\
+lecInterests' = lecInterests\\
+allocation' = allocation\\
+maxPlaces' = maxPlaces
+\end{schema}
+
+\begin{schema}{AddLecturer}
+\Delta ProjectAlloc\\
+l?: PERSON\\
+ts?: \iseq TOPIC\\
+maxAlloc?: \nat_1
+\where
+l? \notin \dom studInterests \cup \dom lecInterests \\
+lecInterests' = lecInterests \cup \{l? \mapsto ts?\} \\
+maxPlaces' = maxPlaces \cup \{l? \mapsto maxAlloc?\} \\
+studInterests' = studInterests\\
+allocation' = allocation
+\end{schema}
+
+\begin{schema}{Allocate}
+\Delta ProjectAlloc\\
+s? : PERSON
+\where
+s? \in \dom studInterests\\
+s? \notin \dom allocation\\
+\exists sup: \dom lecInterests; t: TOPIC; i,j: \nat\\
+| maxPlaces~sup > \#(allocation \rres \{sup\})\\
+\land i \mapsto t \in studInterests~s?\\
+\land j \mapsto t \in lecInterests~sup\\
+@ (\\
+\forall lec: \dom lecInterests; k: \nat | maxPlaces~lec > \# (allocation \rres \{lec\}) \\
+@ ( \\
+(k \mapsto t \in lecInterests~lec \implies k \geq j)\\
+\land \\
+(\ran (1\upto i-1 \dres studInterests~s?) \\
+\cap \ran (lecInterests~lec) = \{\}))\\
+\land \\
+allocation' = allocation \cup \{s? \mapsto sup\}\\
+)\\
+studInterests' = studInterests\\
+lecInterests' = lecInterests
+\end{schema}
+
+\begin{schema}{DeAllocate}
+\Delta ProjectAlloc\\
+s?: PERSON
+\where
+\exists sup: \dom lecInterests\\
+@ (s? \mapsto sup \in allocation\\
+\land allocation' = allocation \setminus \{s? \mapsto sup\})\\
+studInterests' = studInterests\\
+lecInterests' = lecInterests
+\end{schema}
+
+\begin{schema}{RemoveLecsTopic}
+\Delta ProjectAlloc\\
+l?: PERSON\\
+t?: TOPIC
+\where
+l? \in \dom lecInterests\\
+t? \in \ran (lecInterests~l?)\\
+lecInterests' = \\
+ lecInterests \oplus \\
+\{l? \mapsto squash~(lecInterests~l? \nrres\{t?\})\}\\
+studInterests' =studInterests\\
+allocation'=allocation
+\end{schema}
+
+\begin{schema}{LecsAvailable}
+\Xi ProjectAlloc\\
+t?: TOPIC\\
+ps!: \power PERSON
+\where
+ps! = \\
+\{p: \dom lecInterests | t? \in \ran (lecInterests~p)\\
+\land maxPlaces~p > \# (allocation \rres \{p\})\}
+\end{schema}
+
+\begin{zed}
+MESSAGE::= success | isStudent | isLecturer | notStudent | isAllocated | noLecAvailable | notAllocated | notLecturer | notListedTopic
+\end{zed}
+
+\begin{zed}
+SuccessMessage \defs [outcome!: MESSAGE |\draline{O2}{outcome! = success}]
+\end{zed}
+
+\begin{schema}{IsStudent}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+s? \in \dom studInterests\\
+outcome! = isStudent
+\end{schema}
+
+\begin{schema}{IsLecturer}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+s? \in \dom lecInterests\\
+outcome! = isLecturer
+\end{schema}
+
+\begin{schema}{NotStudent}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+s? \notin \dom studInterests\\
+outcome! = notStudent
+\end{schema}
+
+\begin{schema}{IsAllocated}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+s? \notin \dom allocation\\
+outcome! = isAllocated
+\end{schema}
+
+\begin{schema}{NoLecsAvailable}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+\neg (\exists sup:\dom lecInterests @ \\
+maxPlaces~sup > \# (allocation \rres \{sup\})\\
+\land \\
+\ran (studInterests~s?) \cap \ran (lecInterests~sup) \neq \{\})\\
+outcome!=noLecAvailable
+\end{schema}
+
+\begin{schema}{NotAllocated}
+\Xi ProjectAlloc\\
+s?: PERSON\\
+outcome!: MESSAGE
+\where
+s? \notin \dom allocation\\
+outcome!=notAllocated
+\end{schema}
+
+\begin{schema}{NoLecturer}
+\Xi ProjectAlloc\\
+l?: PERSON\\
+outcome!: MESSAGE
+\where
+l? \notin \dom lecInterests\\
+outcome! = notLecturer
+\end{schema}
+
+\begin{schema}{NotListedTopic}
+\Xi ProjectAlloc\\
+l?: PERSON\\
+t?: TOPIC\\
+outcome!: MESSAGE
+\where
+t? \notin \ran (lecInterests~l?)\\
+outcome! = notListedTopic
+\end{schema}
+
+
+\begin{schema}{SupsDiffer}
+\Delta ProjectAlloc\\
+s?: PERSON
+\where
+\exists old, new: \dom lecInterests\\
+@ (s? \mapsto old \in allocation \land \\
+s? \mapsto new \in allocation' \land \\
+old \neq new)
+\end{schema}
+
+\end{document}
+\end{verbatim}

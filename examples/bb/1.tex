@@ -1,0 +1,84 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{zed}
+[\set{NAME}] 
+\end{zed}
+
+\begin{zed}
+[\set{DATE}]
+\end{zed}
+
+\begin{schema}{BirthdayBook}
+    \text{\declaration{\set{known}: \expression{\power NAME}} \\
+    \declaration{\set{birthday}: \expression{NAME \pfun DATE}}}
+\where
+    \text{\expression{\set{known}=\set{\dom \set{birthday}}}}
+\end{schema}
+
+\begin{schema}{InitBirthdayBook}
+    \text{BirthdayBook}
+\where
+    \text{\expression{\set{known'} = \set{\{ \}}}}
+\end{schema}
+
+\begin{schema}{AddBirthday}
+    \text{\Delta BirthdayBook} \\
+    \text{\declaration{\term{name?}: \expression{NAME}} \\
+    \declaration{\term{date?}: \expression{DATE}}}
+\where
+    \text{\expression{\term{name?} \notin \set{known}}\\
+    \expression{\set{birthday'} = \set{\set{birthday}
+    \cup \set{\{\term{\term{name?} \mapsto \term{date?}}\}}}}}
+\end{schema}
+
+\begin{schema}{FindBirthday}
+    \text{\Xi BirthdayBook} \\
+    \text{\declaration{\term{name?}: \expression{NAME}} \\
+    \declaration{\term{date!}: \expression{DATE}} }
+\where
+    \text{\expression{\term{name?} \in \set{known}}\\
+    \expression{\term{date!} = \term{\set{birthday}(\term{name?})}}}
+\end{schema}
+
+\begin{zed} 
+    \set{REPORT} ::= \term{ok} | \term{already\_known} 
+    | \term{not\_known}
+\end{zed}
+
+\begin{schema}{Success}
+    \text{\declaration{\term{result!}: \expression{REPORT}}}
+\where
+    \text{\expression{\term{result!} = \term{ok}}}
+\end{schema}
+
+\begin{schema}{AlreadyKnown}
+    \text{\Xi BirthdayBook} \\
+    \text{\declaration{\term{name?}: \expression{NAME}} \\
+    \declaration{\term{result!}: \expression{REPORT}}}
+\where
+    \text{\expression{\term{name?} \in \set{known}} \\
+    \expression{\term{result!} = \term{already\_known}}}
+\end{schema}
+
+\begin{schema}{NotKnown}
+    \text{\Xi BirthdayBook} \\
+    \text{\declaration{\term{name?}: \expression{NAME}} \\
+    \declaration{\term{result!}: \expression{REPORT}}}
+\where
+    \text{\expression{\term{name?} \notin \set{known}} \\
+    \expression{\term{result!} = \term{not\_known}}}
+\end{schema}
+
+\begin{zed} 
+    RAddBirthday ==\\ 
+    \text{\expression{(\text{AddBirthday} \land 
+    \text{Success})\\  \lor \text{AlreadyKnown}}} \\
+    RFindBirthday ==\\ 
+    \text{\expression{(\text{FindBirthday} 
+    \land \text{Success}) \lor \text{NotKnown}}} \\
+\end{zed}
+
+\end{document}

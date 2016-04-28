@@ -1,0 +1,8 @@
+stateSchema SS1 
+stateInvarients SI1 
+changeSchema CS1 
+precondition PRE1 
+changeSchema CS2 
+precondition PRE2 
+postcondition PO2 
+postcondition PO1 
