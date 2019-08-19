@@ -1,0 +1,193 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\dratheory{T1}{0.23}{
+
+We declare the types of $DECLARATION$ to store all declarations.
+We also need to declare the types $EXPRESSION$ and $DEFINITION$ which will go into the schemaText.
+
+We say that a schemaText is made up of many $LINES$
+\begin{zed}
+[DECLARATION, EXPRESSION, DEFINITION, LINES]
+\end{zed}
+
+We need a type to contain terms and sets. We will call this $VARS$.
+
+\begin{zed}
+[VARS]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{ZcgaState}
+declarations: VARS \rel EXPRESSION \\
+expressions: \power LINES \\
+definitions: \power LINES \\
+definedConstants: \power VARS \\
+TermDeclaration: VARS \rel EXPRESSION \\
+SetDeclaration: VARS \rel EXPRESSION \\
+terms: \power VARS \\
+sets: \power VARS\\
+dvar: \power VARS \\
+\where
+\draline{SI1}{TermDeclaration \subseteq declarations \\
+SetDeclaration \subseteq declarations \\
+dvar \subset sets \cup terms}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitZcgaState}
+ZcgaState' \\
+\where
+\draline{PO1}{
+declarations' = \{\} \\
+expressions' = \{\} \\
+definitions' = \{\} \\
+definedConstants' = \{\} \\
+TermDeclaration' = \{\} \\
+SetDeclaration' = \{\} \\
+terms' = \{\} \\
+sets' = \{\} \\
+dvar' = \{\}}
+\end{schema}}
+
+\initialof{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{CorrectTermDeclaration}
+\Delta ZcgaState \\
+dvarExpression: EXPRESSION \\
+var: VARS \\
+\where
+\draline{PRE1}{
+var \notin dvar} \\
+\draline{PO2}{
+TermDeclaration' = TermDeclaration \cup \{var \mapsto dvarExpression\} \\
+terms' = terms \cup \{var\} \\
+dvar' = dvar \cup \{var\}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{CorrectSetDeclaration}
+\Delta ZcgaState \\
+dvarExpression: EXPRESSION \\
+var: VARS \\
+\where
+\draline{PRE2}{
+var \notin dvar} \\
+\draline{PO3}{
+SetDeclaration' = SetDeclaration \cup \{var \mapsto dvarExpression\} \\
+sets' = sets \cup \{var\} \\
+dvar' = dvar \cup \{var\}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+This schema desribe constants giving terms for example $\# S$ takes set $S$ and gives the cardinality of $S$ which is a term.
+
+\draschema{CS3}{
+\begin{schema}{CorrectConstantTerm}
+\Delta ZcgaState \\
+constant: (\power VARS) \pfun VARS \\
+parameters: \power VARS \\
+newTerm: VARS \\
+\where
+\draline{PRE3}{
+parameters \subseteq sets \cup terms \\
+parameters \neq \{\}} \\
+\draline{PO4}{
+newTerm = constant~parameters \\
+terms' = terms \cup \{newTerm\}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+This schema describes constants giving sets, for example $S \cup T$ gives a set with elements from $S$ and elements of $T$.
+
+\draschema{CS4}{
+\begin{schema}{CorrectConstantSet}
+\Delta ZcgaState \\
+constant: \power VARS \pfun VARS \\
+parameters: \power VARS \\
+newset: VARS \\
+\where
+\draline{PRE4}{
+setparameters \subseteq sets \cup terms \\
+setparameters \neq \{\}} \\
+\draline{PO5}{
+newset = constant~parameters \\
+sets' = sets \cup \{newset\}}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PRE4}
+\allows{PRE4}{PO5}
+
+\draschema{CS5}{
+\begin{schema}{CorrectExpression}
+\Delta ZcgaState \\
+expressConstant: \power VARS \pfun EXPRESSION \\
+expressParameters: \power VARS \\
+newExpression: EXPRESSION
+\where
+\draline{PRE5}{
+expressParameters \subseteq sets \cup terms \\
+expressParameters \neq \{\}} \\
+\draline{PO6}{
+newExpression = expressConstant~expressParameters \\
+expressions' = expressions \cup \{newExpression\}}
+\end{schema}}
+
+\uses{CS5}{IS1}
+\requires{CS5}{PRE5}
+\allows{PRE5}{PO6}
+
+\draschema{CS6}{
+\begin{schema}{CorrectDefinitions}
+\Delta ZcgaState \\
+definedSet: \power VARS \pfun VARS \\
+newdefinition: \power VARS \pfun LINES \\
+parameters: \power VARS \\
+newConstant: VARS \\
+\where
+\draline{PRE6}{
+newConstant \notin sets} \\
+parameters \subseteq sets \cup terms \\
+\draline{PO7}{
+newConstant = definedSet~parameters \\
+definedConstants' = definedConstants \cup \{newConstant\} \\
+sets' = sets \cup \{newConstant\} \\
+definitions = definitions' \cup \{definedSet~parameters\}}
+\end{schema}}
+
+\uses{CS6}{IS1}
+\requires{CS6}{PRE6}
+\allows{PRE6}{PO7}
+
+\draschema{OS1}{
+\begin{schema}{CorrectSchemaText}
+\Xi ZcgaState \\
+schemaText: \power PARAGRAPH
+\where
+\draline{O1}{
+schemaText = \{\} \lor \\
+schemaText = definitions \cup expressions}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{O1}
+
+}
+\end{document}

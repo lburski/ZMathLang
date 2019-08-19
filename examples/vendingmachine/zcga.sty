@@ -1,0 +1,52 @@
+\ProvidesPackage{zcga}
+
+%Packages needed
+\usepackage{tikz}
+\usepackage{varwidth}
+\usepackage{zed}
+  
+%Defining a colour for highlighting
+\definecolor{lightgray}{gray}{0.80}
+
+%Defining the colours so they match original MathLang
+\definecolor{expression}{HTML}{0FD016}
+\definecolor{set}{HTML}{FF5050}
+\definecolor{term}{HTML}{3A9FF1}
+\definecolor{declaration}{HTML}{808080}
+\definecolor{specification}{HTML}{FFE6CF}
+\definecolor{text}{HTML}{C5C5C5}
+\definecolor{typex}{HTML}{E4AF00}
+\definecolor{typed}{HTML}{D6D6D6}
+\definecolor{boxcolor}{HTML}{000000}
+\definecolor{defin}{HTML}{D7D7D7}
+\definecolor{noun}{HTML}{FFA500}
+
+
+%Defining commands so that boxes can be put around specifications
+\renewcommand\set[1]{%
+  \fcolorbox{boxcolor}{set}{\begin{varwidth}
+  {\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+
+\newcommand\term[1]{%
+  \fcolorbox{boxcolor}{term}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+  
+\newcommand\noun[1]{%
+  \fcolorbox{boxcolor}{noun}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+
+\newcommand\expression[1]{%
+  \fcolorbox{boxcolor}{expression}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+
+\newcommand\declaration[1]{%
+  \fcolorbox{boxcolor}{declaration}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+
+\newcommand\specification[1]{%
+  \fcolorbox{boxcolor}{specification}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}#1\end{varwidth}}}
+  
+ \newcommand\text[1]{%
+  \fcolorbox{boxcolor}{text}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}$#1$\end{varwidth}}}
+  
+\newcommand\definition[1]{%
+  \fcolorbox{boxcolor}{defin}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}#1\end{varwidth}}}
+ 
+
+\endinput

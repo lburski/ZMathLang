@@ -1,0 +1,128 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{zed}
+[\set{DECLARATION}, \set{EXPRESSION}, \set{LINES}, \set{DEFINITION}]
+\end{zed}
+
+\begin{zed}
+[\set{VARS}]
+\end{zed}
+
+\begin{schema}{ZcgaState}
+\text{\declaration{\set{declarations}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{expressions}: \expression{\power LINES}}} \\
+\text{\declaration{\set{definitions}: \expression{\power LINES}}} \\
+\text{\declaration{\set{definedConstants}: \expression{\power VARS}}} \\
+\text{\declaration{\set{TermDeclaration}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{SetDeclaration}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{terms}: \expression{\power VARS}}} \\
+\text{\declaration{\set{sets}: \expression{\power VARS}}} \\
+\text{\declaration{\set{dvar}: \expression{\power VARS}}} \\
+\where
+\text{\expression{\set{TermDeclaration} \subseteq \set{declarations}}} \\
+\text{\expression{\set{SetDeclaration} \subseteq \set{declarations}}} \\
+\text{\expression{\set{dvar} \subset \set{\set{sets} \cup \set{terms}}}}
+\end{schema}
+
+\begin{schema}{InitZcgaState}
+\text{ZcgaState'} \\
+\where
+\text{\expression{\set{declarations'} = \set{\{\}}}} \\
+\text{\expression{\set{expressions'} = \set{\{\}}}} \\
+\text{\expression{\set{definitions'} = \set{\{\}}}} \\
+\text{\expression{\set{definedConstants'} = \set{\{\}}}} \\
+\text{\expression{\set{TermDeclaration'} = \set{\{\}}}} \\
+\text{\expression{\set{SetDeclaration'} = \set{\{\}}}} \\
+\text{\expression{\set{terms'} = \set{\{\}}}} \\
+\text{\expression{\set{sets'} = \set{\{\}}}} \\
+\text{\expression{\set{dvar'} = \set{\{\}}}} \\
+\end{schema}
+
+\begin{schema}{CorrectTermDeclaration}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\term{dvarExpression}: \expression{EXPRESSION}}} \\
+\text{\declaration{\term{var}: \expression{VARS}}} \\
+\where
+\text{\expression{\term{var} \notin \set{dvar}}} \\
+\text{\expression{\set{TermDeclaration'} = \set{\set{TermDeclaration} \cup \set{\{\term{\term{var} \mapsto \term{dvarExpression}}\}}}}} \\
+\text{\expression{\set{terms'} = \set{\set{terms} \cup \set{\{\term{var}\}}}}} \\
+\text{\expression{\set{dvar'} = \set{\set{dvar} \cup \set{\{\term{var}\}}}}}
+\end{schema}
+
+\begin{schema}{CorrectSetDeclaration}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\term{dvarExpression}: \expression{EXPRESSION}}} \\
+\text{\declaration{\term{var}: \expression{VARS}}} \\
+\where
+\text{\expression{\term{var} \notin \set{dvar}}} \\
+\text{\expression{\set{SetDeclaration'} = \set{\set{SetDeclaration} \cup \set{\{\term{\term{var} \mapsto \term{dvarExpression}}\}}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{var}\}}}}} \\
+\text{\expression{\set{dvar'} = \set{\set{dvar} \cup \set{\{\term{var}\}}}}}
+\end{schema}
+
+This schema desribe constants giving terms for example $\# S$ takes set $S$ and gives the cardinality of $S$ which is a term.
+
+\begin{schema}{CorrectConstantTerm}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{constant}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newTerm}: \expression{VARS}}} \\
+\where
+\text{\expression{\set{parameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{parameters} \neq \set{\{\}}}} \\
+\text{\expression{\term{newTerm} = \term{\set{constant}~\set{parameters}}}} \\
+\text{\expression{\set{terms'} = \set{\set{terms} \cup \set{\{\term{newTerm}\}}}}}
+\end{schema}
+
+This schema describes constants giving sets, for example $S \cup T$ gives a set with elements from $S$ and elements of $T$.
+
+\begin{schema}{CorrectConstantSet}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{constant}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newset}: \expression{VARS}}} \\
+\where
+\text{\expression{\set{setparameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{setparameters} \neq \set{\{\}}}} \\
+\text{\expression{\term{newset} = \term{\set{constant}~\set{parameters}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{newset}\}}}}}
+\end{schema}
+
+\begin{schema}{CorrectExpression}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{expressConstant}: \expression{\power VARS \pfun EXPRESSION}}} \\
+\text{\declaration{\set{expressParameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newExpression}: \expression{EXPRESSION}}}
+\where
+\text{\expression{\set{expressParameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{expressParameters} \neq \set{\{\}}}} \\
+\text{\expression{\term{newExpression} = \term{\set{expressConstant}~\set{expressParameters}}}} \\
+\text{\expression{\set{expressions'} = \set{\set{expressions} \cup \set{\{\term{newExpression}\}}}}}
+\end{schema}
+
+\begin{schema}{CorrectDefinitions}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{definedSet}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{newdefinition}: \expression{\power VARS \pfun LINES}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newConstant}: \expression{VARS}}} \\
+\where
+\text{\expression{\term{newConstant} \notin \set{sets}}} \\
+\text{\expression{\term{newConstant} = \term{\set{definedSet}~\set{parameters}}}} \\
+\text{\expression{\set{definedConstants'} = \set{\set{definedConstants} \cup \set{\{\term{newConstant}\}}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{newConstant}\}}}}} \\
+\text{\expression{\set{definitions'} = \set{\set{definitions} \cup \set{\{\term{newdefinition~parameters}\}}}}}
+\end{schema}
+
+\begin{schema}{CorrectSchemaText}
+\text{\Xi ZcgaState} \\
+\text{\declaration{\set{schemaText}: \expression{\power LINES}}}
+\where
+\text{\expression{\expression{\set{schemaText} = \set{\{\}}} \lor \\
+\expression{\set{schemaText} = \set{\set{definitions} \cup \set{expressions}}}}}
+\end{schema}
+
+\end{document}

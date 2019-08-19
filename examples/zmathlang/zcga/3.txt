@@ -1,0 +1,61 @@
+stateSchema SS1 
+
+stateInvarients SI1 
+
+initialSchema IS1
+
+postcondition PO1
+
+changeSchema CS5 
+
+precondition PRE5 
+
+postcondition PO6 
+
+changeSchema CS4 
+
+precondition PRE4 
+
+postcondition PO5
+
+changeSchema CS6 
+
+precondition PRE6 
+
+postcondition PO7
+
+changeSchema CS1 
+
+precondition PRE1 
+
+postcondition PO2
+
+changeSchema CS3 
+
+precondition PRE3 
+
+postcondition PO4 
+
+changeSchema CS2 
+
+precondition PRE2 
+
+postcondition PO3
+
+outputSchema OS1
+
+output O1
+
+lemma L1_(CS5) 
+
+lemma L2_(CS4) 
+
+lemma L3_(CS1) 
+
+lemma L4_(CS3) 
+
+lemma L5_(CS2) 
+
+lemma L6_(CS6) 
+
+

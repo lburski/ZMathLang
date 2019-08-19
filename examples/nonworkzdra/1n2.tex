@@ -1,0 +1,226 @@
+\begin{verbatim}
+\documentclass{article}
+\usepackage{zmathlang}
+\begin{document}
+
+\dratheory{T1}{0.15}{
+
+\begin{zed}
+[\set{NAME}] 
+\end{zed}
+
+\begin{zed}
+[\set{SURNAME}]
+\end{zed}
+
+\begin{zed}
+[\set{TELEPHONE}]
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{TelephoneDirectory}
+\text{\declaration{\set{persons}: \expression{NAME \fun SURNAME}}} \\ 
+\text{\declaration{\set{phoneNumbers}: \expression{NAME \pfun TELEPHONE}}}
+\where 
+\draline{SI1}{
+\text{\expression{\set{\dom \set{phoneNumbers}} = \set {\dom \set{persons}}}}}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitTelephoneDirectory} 
+\text{TelephoneDirectory' }
+\where 
+\draline{PO1}{
+\text{\expression{\set{phoneNumbers'} = \set{\{\}}}} \\
+\text{\expression{\set{persons'} = \set{\{\}}}}}
+\end{schema}}
+
+\initialof{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{AddPerson}
+\text{\Delta TelephoneDirectory} \\
+\text{\declaration{\term{name?}: \expression{NAME}}} \\
+\text{\declaration{\term{surname?}: \expression{SURNAME}}} \\
+\text{\declaration{\term{phone?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE1}{
+\text{\expression{\term{\term{name?} \mapsto \term{surname?}} \notin \set{persons}}}}\\
+\draline{PO2}{
+\text{\expression{\set{persons'} = \set{\set{persons} \cup \set{\{\term{\term{name?} \mapsto \term{surname?}}\}}}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{AddNumber}
+\text{\Delta TelephoneDirectory} \\
+\text{\declaration{\term{n?}: \expression{NAME}}} \\
+\text{\declaration{\term{s?}: \expression{SURNAME}}} \\
+\text{\declaration{\term{p?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE2}{
+\text{\expression{\term{\term{n?} \mapsto \term{s?}} \in \set{persons}}}\\
+\text{\expression{\term{p?} \notin \set{\ran \set{phoneNumbers}}}}} \\
+\draline{PO3}{
+\text{\expression{\set{phoneNumbers'} = \set{\set{phoneNumbers} \cup \set{\{\term{\term{name?} \mapsto \term{phone?}}\}}}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\allows{PRE2}{PO3}
+\requires{CS2}{PRE2}
+
+\draschema{CS3}{
+\begin{schema}{RemovePerson}
+\text{\Delta TelephoneDirectory} \\
+\text{\declaration{\term{n?}: \expression{NAME}}} \\
+\text{\declaration{\term{s?}: \expression{SURNAME}}} \\
+\text{\declaration{\term{p?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE3}{
+\text{\expression{\term{\term{n?} \mapsto \term{s?}} \in \set{persons}}} \\
+\text{\expression{\term{\term{n?} \mapsto \term{p?} \notin \set{phoneNumbers}}}}}\\
+\draline{PO4}{
+\text{\expression{\set{persons'} = \set{\set{persons} \setminus \set{\{\term{\term{n?} \mapsto \term{s?}}\}}}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\allows{PRE3}{PO4}
+\requires{CS3}{PRE3}
+
+\draschema{CS4}{
+\begin{schema}{RemoveNumber}
+\text{\Delta TelephoneDirectory} \\
+\text{\declaration{\term{p?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE6}{
+\text{\expression{\term{p?} \in \set{\ran \set{phoneNumbers}}}}} \\
+\draline{PO5}{
+\text{\expression{\exists \declaration{\term{m}: \expression{\dom persons}} @\\
+\expression{\expression{\term{\term{m} \mapsto \term{p?}} \in \set{phoneNumbers}} \land \\ \expression{\set{phoneNumbers'} = \set{\set{phoneNumbers} \setminus \set{\{\term{\term{m} \mapsto \term{p?}}\}}}}}}}}\\
+\end{schema}}
+
+\uses{CS4}{IS1}
+\allows{PRE6}{PO5}
+\requires{CS4}{PRE6}
+
+\begin{zed}
+\set{OUTPUT} ::= \term{success} | \term{alreadyInDirectory} | \term{nameNotInDirectory} | \term{numberInUse} | \term{numberDoesntExist}
+\end{zed}
+
+\draschema{OS1}{
+\begin{schema}{Success}
+\text{\declaration{\term{message!}: \expression{OUTPUT}}} \\
+\where
+\draline{O1}{
+\text{\expression{\term{message!} = \term{success}}}}
+\end{schema}}
+
+\requires{OS1}{O1}
+
+\draschema{OS2}{
+\begin{schema}{AlreadyInDirectory}
+\text{\Xi TelephoneDirectory} \\
+\text{\declaration{\term{message!}: \expression{OUTPUT}}} \\
+\text{\declaration{\term{n?}: \expression{NAME}}} \\
+\text{\declaration{\term{s?}: \expression{SURNAME}}}
+\where
+\draline{PRE4}{
+\text{\expression{\term{\term{n?} \mapsto \term{s?}} \in \set{persons}}}} \\
+\draline{O2}{
+\text{\expression{\term{message!} = \term{alreadyInDirectory}}}}
+\end{schema}}
+
+\requires{OS2}{PRE4}
+\allows{PRE4}{O2}
+\uses{OS2}{IS1}
+
+\draschema{OS3}{
+\begin{schema}{NameNotInDirectory}
+\text{\Xi TelephoneDirectory} \\
+\text{\declaration{\term{message!}: \expression{OUTPUT}}} \\
+\text{\declaration{\term{n?}: \expression{NAME}}} \\
+\text{\declaration{\term{s?}: \expression{SURNAME}}}
+\where
+\draline{PRE5}{
+\text{\expression{\term{\term{n?} \mapsto \term{s?}} \notin \set{persons}}}} \\
+\draline{O3}{
+\text{\expression{\term{message!} = \term{nameNotInDirectory}}}}
+\end{schema}}
+
+\requires{OS3}{PRE5}
+\allows{PRE5}{O3}
+\uses{OS3}{IS1}
+
+\draschema{OS4}{
+\begin{schema}{NumberInUse}
+\text{\declaration{\term{message!}: \expression{OUTPUT}}} \\
+\text{\declaration{\term{p?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE6}{
+\text{\expression{\term{p?} \in \set{ \ran \set{phoneNumbers}}}}} \\
+\draline{O4}{\text{\expression{\term{message!} = \term{numberInUse}}}}
+\end{schema}}
+
+\requires{OS4}{PRE6}
+\allows{PRE6}{O4}
+\uses{OS4}{IS1}
+
+\draschema{OS5}{
+\begin{schema}{NumberDoesntExist}
+\text{\declaration{\term{message!}: \expression{OUTPUT}}} \\
+\text{\declaration{\term{p?}: \expression{TELEPHONE}}}
+\where
+\draline{PRE8}{
+\text{\expression{\term{p?} \notin \set{\ran \set{phoneNumbers}}}}} \\
+\draline{O5}{\text{\expression{\term{message!} = \term{numberDoesntExist}}}}
+\end{schema}}
+
+\requires{OS5}{PRE8}
+\allows{PRE8}{O5}
+\uses{OS5}{IS1}
+
+\begin{zed}
+\draline{TS1}{TotalAddPerson \defs \text{\expression{(\text{AddPerson} \land \text{Success}) \\ \lor \text{AlreadyInDirectory}}}} \\
+\draline{TS2}{TotalRemovePerson \defs \text{\expression{(\text{RemovePerson} \land \text{Success}) \\ \lor \text{NameNotInDirectory}}}} \\
+\draline{TS3}{TotalAddNumber \defs \text{\expression{(\text{AddNumber} \land \text{Success}) \\ \lor \text{NameNotInDirectory} \lor \text{NumberInUse}}}} \\
+\draline{TS4}{TotalRemoveNumber \defs \text{\expression{(\text{RemoveNumber} \land \text{Success}) \\ \lor \text{NumberDoesntExist} \lor \text{NameNotInDirectory}}}} \\
+\end{zed}
+
+\totalises{TS1}{CS1}
+\totalises{TS1}{OS2}
+\totalises{TS2}{CS3}
+\totalises{TS2}{OS3}
+\totalises{TS3}{CS2}
+\totalises{TS3}{OS4}
+\totalises{TS3}{OS3}
+\totalises{TS4}{CS4}
+\totalises{TS4}{OS5}
+\totalises{TS4}{OS3}
+
+\begin{zed}
+\draline{TS5}{TotalPhone \defs \text{\expression{\text{TotalAddPerson} \lor \text{TotalRemovePerson} \lor \text{TotalAddNumber}  \lor \text{TotalRemoveNumber}}}}
+\end{zed}
+
+\totalises{TS5}{TS1}
+\totalises{TS5}{TS2}
+\totalises{TS5}{TS3}
+\totalises{TS5}{TS4}
+
+\begin{zed}
+\draline{TS6}{TotalPhoneAndTotalAddPerson \defs \text{\expression{\text{TotalPhone} \lor \text{TotalAddPerson}}}}
+\end{zed}
+
+\uses{TS6}{TS5}
+\uses{TS6}{TS1}
+
+\uses{CS4}{TS6}
+}
+
+\end{document}
+\end{verbatim}

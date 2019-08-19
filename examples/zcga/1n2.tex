@@ -1,0 +1,195 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\dratheory{T1}{0.13}{
+
+We declare the types of $DECLARATION$ to store all declarations.
+We also need to declare the types $EXPRESSION$ and $DEFINITION$ which will go into the schemaText.
+
+We say that a schemaText is made up of many $LINES$
+
+\begin{zed}
+[\set{DECLARATION}, \set{EXPRESSION}, \set{LINES}, \set{SET}, \set{DEFINITION}]
+\end{zed}
+
+We need a type to contain terms and sets. We will call this $VARS$.
+
+\begin{zed}
+\set{VARS}
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{ZcgaState}
+\text{\declaration{\set{declarations}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{expressions}: \expression{\power LINES}}} \\
+\text{\declaration{\set{definitions}: \expression{\power LINES}}} \\
+\text{\declaration{\set{definedConstants}: \expression{\power VARS}}} \\
+\text{\declaration{\set{TermDeclaration}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{SetDeclaration}: \expression{VARS \rel EXPRESSION}}} \\
+\text{\declaration{\set{terms}: \expression{\power VARS}}} \\
+\text{\declaration{\set{sets}: \expression{\power VARS}}} \\
+\text{\declaration{\set{dvar}: \expression{\power VARS}}} \\
+\where
+\draline{SI1}{
+\text{\expression{\set{TermDeclaration} \subseteq \set{declarations}}} \\
+\text{\expression{\set{SetDeclaration} \subseteq \set{declarations}}} \\
+\text{\expression{\set{dvar} \subset \set{\set{sets} \cup \set{terms}}}}}
+\end{schema}}
+
+\requires{SS1}{SI1}
+
+\draschema{IS1}{
+\begin{schema}{InitZcgaState}
+\text{ZcgaState'} \\
+\where
+\draline{PO1}{
+\text{\expression{\set{declarations'} = \set{\{\}}}} \\
+\text{\expression{\set{expressions'} = \set{\{\}}}} \\
+\text{\expression{\set{definitions'} = \set{\{\}}}} \\
+\text{\expression{\set{definedConstants'} = \set{\{\}}}} \\
+\text{\expression{\set{TermDeclaration'} = \set{\{\}}}} \\
+\text{\expression{\set{SetDeclaration'} = \set{\{\}}}} \\
+\text{\expression{\set{terms'} = \set{\{\}}}} \\
+\text{\expression{\set{sets'} = \set{\{\}}}} \\
+\text{\expression{\set{dvar'} = \set{\{\}}}}}
+\end{schema}}
+
+\initialof{IS1}{SS1}
+\requires{IS1}{PO1}
+
+\draschema{CS1}{
+\begin{schema}{CorrectTermDeclaration}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\term{dvarExpression}: \expression{EXPRESSION}}} \\
+\text{\declaration{\term{var}: \expression{TERM}}} \\
+\where
+\draline{PRE1}{
+\text{\expression{\term{var} \notin \set{dvar}}}} \\
+\draline{PO2}{
+\text{\expression{\set{TermDeclaration'} = \set{\set{TermDeclaration} \cup \set{\{\term{\term{var} \mapsto \term{dvarExpression}}\}}}}} \\
+\text{\expression{\set{terms'} = \set{\set{terms} \cup \set{\{\term{var}\}}}}} \\
+\text{\expression{\set{dvar'} = \set{\set{dvar} \cup \set{\{\term{var}\}}}}}}
+\end{schema}}
+
+\uses{CS1}{IS1}
+\requires{CS1}{PRE1}
+\allows{PRE1}{PO2}
+
+\draschema{CS2}{
+\begin{schema}{CorrectSetDeclaration}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\term{dvarExpression}: \expression{EXPRESSION}}} \\
+\text{\declaration{\term{var}: \expression{VARS}}} \\
+\where
+\draline{PRE2}{
+\text{\expression{\term{var} \notin \set{dvar}}}} \\
+\draline{PO3}{
+\text{\expression{\set{SetDeclaration'} = \set{\set{SetDeclaration} \cup \set{\{\term{\term{var} \mapsto \term{dvarExpression}}\}}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{var}\}}}}} \\
+\text{\expression{\set{dvar'} = \set{\set{dvar} \cup \set{\{\term{var}\}}}}}}
+\end{schema}}
+
+\uses{CS2}{IS1}
+\requires{CS2}{PRE2}
+\allows{PRE2}{PO3}
+
+This schema desribe constants giving terms for example $\# S$ takes set $S$ and gives the cardinality of $S$ which is a term.
+
+\draschema{CS3}{
+\begin{schema}{CorrectConstantTerm}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{constant}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newTerm}: \expression{VARS}}} \\
+\where
+\draline{PRE3}{
+\text{\expression{\set{parameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{parameters} \neq \set{\{\}}}}} \\
+\draline{PO4}{
+\text{\expression{\term{newTerm} = \term{\set{constant}~\set{parameters}}}} \\
+\text{\expression{\set{terms'} = \set{\set{terms} \cup \set{\{\term{newTerm}\}}}}}}
+\end{schema}}
+
+\uses{CS3}{IS1}
+\requires{CS3}{PRE3}
+\allows{PRE3}{PO4}
+
+This schema describes constants giving sets, for example $S \cup T$ gives a set with elements from $S$ and elements of $T$.
+
+\draschema{CS4}{
+\begin{schema}{CorrectConstantSet}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{constant}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newset}: \expression{VARS}}} \\
+\where
+\draline{PRE4}{
+\text{\expression{\set{setparameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{setparameters} \neq \set{\{\}}}}} \\
+\draline{PO5}{
+\text{\expression{\term{newset} = \term{\set{constant}~\set{parameters}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{newset}\}}}}}}
+\end{schema}}
+
+\uses{CS4}{IS1}
+\requires{CS4}{PRE4}
+\allows{PRE4}{PO5}
+
+\draschema{CS5}{
+\begin{schema}{CorrectExpression}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{expressConstant}: \expression{\power VARS \pfun EXPRESSION}}} \\
+\text{\declaration{\set{expressParameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newExpression}: \expression{EXPRESSION}}}
+\where
+\draline{PRE5}{
+\text{\expression{\set{expressParameters} \subseteq \set{\set{sets} \cup \set{terms}}}} \\
+\text{\expression{\set{expressParameters} \neq \set{\{\}}}}} \\
+\draline{PO6}{
+\text{\expression{\term{newExpression} = \term{\set{expressConstant}~\set{expressParameters}}}} \\
+\text{\expression{\set{expressions'} = \set{\set{expressions} \cup \set{\{\term{newExpression}\}}}}}}
+\end{schema}}
+
+\uses{CS5}{IS1}
+\requires{CS5}{PRE5}
+\allows{PRE5}{PO6}
+
+\draschema{CS6}{
+\begin{schema}{CorrectDefinitions}
+\text{\Delta ZcgaState} \\
+\text{\declaration{\set{definedSet}: \expression{\power VARS \pfun VARS}}} \\
+\text{\declaration{\set{newdefinition}: \expression{\power VARS \pfun LINES}}} \\
+\text{\declaration{\set{parameters}: \expression{\power VARS}}} \\
+\text{\declaration{\term{newConstant}: \expression{VARS}}} \\
+\where
+\draschema{PRE6}{
+\text{\expression{\term{newConstant} \notin \set{sets}}}} \\
+\draline{PO7}{
+\text{\expression{\term{newConstant} = \term{\set{definedSet}~\set{parameters}}}} \\
+\text{\expression{\set{definedConstants'} = \set{\set{definedConstants} \cup \set{\{\term{newConstant}\}}}}} \\
+\text{\expression{\set{sets'} = \set{\set{sets} \cup \set{\{\term{newConstant}\}}}}} \\
+\text{\expression{\set{definitions'} = \set{\set{definitions} \cup \set{\{\term{newdefinition~parameters}\}}}}}}
+\end{schema}}
+
+\uses{CS6}{IS1}
+\requires{CS6}{PRE6}
+\allows{PRE6}{PO7}
+
+\draschema{OS1}{
+\begin{schema}{CorrectSchemaText}
+\text{\Xi ZcgaState} \\
+\text{\declaration{\set{schemaText}: \expression{\power PARAGRAPH}}}
+\where
+\draline{O1}{
+\text{\expression{\expression{\set{schemaText} = \set{\{\}}} \lor \\
+\expression{\set{schemaText} = \set{\set{definitions} \cup \set{expressions}}}}}}
+\end{schema}}
+
+\uses{OS1}{SS1}
+\requires{OS1}{O1}
+
+}
+
+\end{document}

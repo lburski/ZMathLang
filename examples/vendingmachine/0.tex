@@ -1,0 +1,507 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{zed}
+State ::= init | norm | broken | stop
+\end{zed}
+
+\begin{zed}
+OnOff ::= on |off
+\end{zed}
+
+\begin{zed}
+OpenClosed ::= open | closed
+\end{zed}
+
+Physical Constants
+
+\begin{axdef}
+w_{min}: \nat \\
+w_{max}: \nat \\
+w_{opt}: \nat \\
+l: \nat \\
+d_{max}: \nat \\
+\delta_{p}: \nat \\
+\delta_{d}: \nat \\
+\where
+w_{min} < w_{max}
+\end{axdef}
+
+Measured values
+
+\begin{schema}{Input}
+w?: \nat \\
+d?: \nat
+\end{schema}
+
+Control values
+
+\begin{schema}{Pumps}
+p_{1}, p_{2}, p_{3}, p_{4}: OnOff 
+\end{schema}
+
+\begin{schema}{SteamBoiler0}
+Pumps \\
+v:OpenClosed \\
+a:OnOff \\
+z: State
+\end{schema}
+
+Auxiliary Schemata
+
+\begin{schema}{PumpsOff}
+Pumps'
+\where
+p_{1}' = off \land p_{2}' = off \land p_{3}' = off \land p_{4}' = off
+\end{schema}
+
+\begin{schema}{PumpsOn}
+Pumps'
+\where
+p_{1}' = on \land p_{2}' = on \land p_{3}' = on \land p_{4}' = on
+\end{schema}
+
+Steam Boiler Initial State
+
+\begin{schema}{SteamBoilerInit0}
+SteamBoiler0'
+\where
+a'= off \\
+z' = init
+\end{schema}
+
+Operations for Initialisation
+
+\begin{schema}{SInitNormal0}
+\Delta SteamBoiler0 \\
+Input
+\where
+z = init \\
+d? = 0 \\
+w? \geq w_{min} + d_{max} \\
+w? \leq w_{max} \\
+PumpsOff \\
+z' = norm \\
+v' = closed \\
+a' = on 
+\end{schema}
+
+\begin{schema}{SInitStop0}
+\Delta SteamBoiler0 \\
+Input 
+\where
+z = init \\
+d? > 0 \\
+z' = stop
+\end{schema}
+
+\begin{schema}{SInitFill0}
+\Delta SteamBoiler0 \\
+Input 
+\where
+z = init \\
+d? = 0 \\
+w? < w_{min} + d_{max} \\
+PumpsOn \\
+z' =z \\
+v' = closed \\
+a' = off
+\end{schema}
+
+\begin{schema}{SInitEmpty0}
+\Delta SteamBoiler0 \\
+Input
+\where
+z = init \\
+d? = 0 \\
+w? > w_{max} \\
+PumpsOff \\
+z' = z \\
+v' = open \\
+a' = off
+\end{schema}
+
+\begin{zed}
+ControlInit0 \defs SInitNormal0 \\
+\lor SInitStop0 \\
+\lor SInitFill0 \\
+\lor SInitEmpty0
+\end{zed}
+
+Operations for Normal State
+
+\begin{schema}{SNormalFill0}
+\Delta SteamBoiler0 \\
+Input 
+\where
+z = norm \\
+w? \geq w_{min} \\
+w? \leq w_{opt} -3l \\
+PumpsOn \\
+v' = closed \land a' = on \land z' = z
+\end{schema}
+
+Note: Simplified version where all four pumps are swicthed on simultaneously.
+
+\begin{schema}{SNormalContinue0}
+\Xi SteamBoiler0 \\
+Input 
+\where
+z = norm \\
+w? > w_{opt} - 3l \\
+w? \leq w_{opt}
+\end{schema}
+
+\begin{schema}{SNormalNotFill0}
+\Delta SteamBoiler0 \\
+Input 
+\where
+z = norm \\
+w? > w_{opt} \\
+w? \leq w_{max} \\
+PumpsOff \\
+v' = closed \land a' = on \land z' = z
+\end{schema}
+
+\begin{schema}{SNormalStop0}
+\Delta SteamBoiler0 \\
+Input 
+\where
+z = norm \\
+w? < w_{min} \lor w? > w_{max} \\
+a' = off \land z' = stop
+\end{schema}
+
+\begin{zed}
+ControlNormal0 \defs SNormalFill0 \\
+ \lor SNormalContinue0 \\
+  \lor SNormalNotFill0\\
+  \lor SNormalStop0
+\end{zed}
+
+\begin{zed}
+Control0 \defs ControlInit0 \\
+ \lor ControlNormal0
+\end{zed}
+
+Extended Solution
+
+Additional Type
+
+\begin{zed}
+WorksBroken ::= works | broken
+\end{zed}
+
+Additional measured values
+
+\begin{schema}{ControlInput}
+k_{w}?: WorksBroken \\
+k_{d}?: WorksBroken \\
+k_{p1}?: WorksBroken \\
+k_{p2}?: WorksBroken \\
+k_{p3}?: WorksBroken \\
+k_{p4}?: WorksBroken \\
+\end{schema}
+
+
+Control values
+
+\begin{schema}{SteamBoiler1}
+SteamBoiler0 \\
+s: \nat \\
+\delta: \nat
+\end{schema}
+
+Initial State
+
+\begin{schema}{SteamBoilerInit1}
+SteamBoiler1' 
+\where
+a' = off \\
+z' = init
+\end{schema}
+
+Auxiliary Functions
+
+\begin{axdef}
+pswitch: (OnOff \times WorksBroken) \fun OnOff
+\where
+pswitch(on, works) = on \\
+pswitch(on, broken) = off \\ 
+pswitch(off, works) = off \\
+pswitch(off,broken) = off
+\end{axdef}
+
+\begin{axdef}
+pamount: (OnOff \times WorksBroken) \fun \nat
+\where
+\forall x:OnOff, y: WorksBroken | x = off \lor y = broken @ \\
+pamount(x, y) = 0 \\
+pamount(on, works) = 1
+\end{axdef}
+
+Auxilary Schemata
+
+\begin{schema}{PumpsControlledOn}
+Pumps' \\
+ControlInput
+\where
+p_{1}' = pswitch(on, k_{p1}?) \land p_{2}' = pswitch(on,k_{p2}?) \\
+p_{2}' = pswitch(on, k_{p3}?) \land p_{4}' = pswitch(on,k_{p4}?) 
+\end{schema}
+
+\begin{schema}{PumpsControlledOff}
+Pumps' \\
+ControlInput
+\where
+p_{1}' = pswitch(off, k_{p1}?) \land p_{2}' = pswitch(off,k_{p2}?) \\
+p_{2}' = pswitch(off, k_{p3}?) \land p_{4}' = pswitch(off,k_{p4}?) 
+\end{schema}
+
+Operations for Initialisation
+
+\begin{schema}{SInitNormal1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput
+\where
+z = init \\
+d? = 0 \\
+k_{w} = works \land k_{d} = works \\
+w? \geq w_{min} + d_{max} \\
+w? \leq w_{max} \\
+z' = norm \\
+v' = closed \\
+a' = on \\
+s' = w? \\
+PumpsOff
+\end{schema}
+
+\begin{schema}{SInitFill1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+\where
+z = init \\
+d? = 0 \\
+k_{w} = works \land k_{d} = works \\
+w? < w_{min} + d_{max} \\
+z' = z \\
+v' = closed \\
+a' = off \\
+PumpsOn 
+\end{schema}
+
+\begin{schema}{SInitEmpty1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+\where
+z = init \\
+d? = 0 \\
+w? > w_{max} \\
+z' = z \\
+v' = open \\
+a' = off \\
+PumpsOff
+\end{schema}
+
+\begin{schema}{SInitStop1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput
+\where
+z = init \\
+d? > 0 \lor K_{w} = broken \lor k_{d} = broken \\
+z' = stop
+\end{schema}
+
+\begin{zed}
+ControlInit1 \defs SInitNormal1 \\
+\lor SInitFill1 \\
+\lor SInitEmpty1 \\
+\lor SInitStop1
+\end{zed}
+
+Operations for Normal State
+
+\begin{schema}{SNormalFill1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput
+\where
+z = norm \\
+k_{w} = works \\
+w? \geq w_{min} \\
+w? \leq w_{opt} - 3l \\
+s' = w? \\
+PumpsControlledOn \\
+v' = closed \land a' = on \land z' = z
+\end{schema}
+
+\begin{schema}{SNormalContinue1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput 
+\where
+z = norm \\
+k_{w} = works \\
+w? > w_{opt} - 3l \\
+w? \leq w_{opt} \\
+p_{1}' = pswitch(p_{1}, k_{p1}) \land p_{2}' = pswitch(p_{2}, k_{p2}) \\
+p_{3}' = pswitch(p_{3}, k_{p3}) \land p_{4}' = pswitch(p_{4}, k_{p4}) \\
+s' = w? \\
+v' = v \land a' = a \land z' = z
+\end{schema}
+
+\begin{schema}{SNormalNotFill1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput
+\where
+z = norm \\
+k_{w} = works \\
+w? > w_{opt} \\
+w? \leq w_{max} \\
+s' = w? \\
+PumpsControlledOff \\
+v' = closed \land a' = on \land z' = z
+\end{schema}
+
+\begin{schema}{SNormalWaterStop1}
+\Delta SteamBoiler \\
+Input \\
+ControlInput 
+\where
+z = norm \lor z = broken \\
+k_{w} = works \\
+w? < w_{min} \lor w? > w_{max} \\
+a' = off \land z' = stop
+\end{schema}
+
+\begin{schema}{SNormalControlStop1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput 
+\where
+z = norm \\
+k_{w} = broken \land k_{d} = broken \\
+a' = off \land z' = stop
+\end{schema}
+
+\begin{schema}{AmountComputation}
+SteamBoiler1 \\
+ControlInput \\
+amount: \nat \\
+\delta_{pumps}: \nat
+\where
+amount = l * (pamount(p_{1}, k_{p1}?) + pamount(p_{2}, k_{p2}?) +  \\
+pamount(p_{3}, k_{p3}?) + pamount(p_{4}, k_{p4}?)) \\
+\delta_{pumps} = \delta_{p} * (pamount(p_{1}, works) + (pamount(p_{2}, \\ works) + (pamount(p_{3}, works) + (pamount(p_{4}, works))
+\end{schema}
+
+\begin{schema}{SNormalBroken1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+AmountComputation \\
+\where
+z = norm \\
+k_{w} = broken \\
+k_{d} = works \\
+s' = s+ amount -d? \\
+\delta' = \delta_{pumps} + \delta_{d} \\
+s' \geq w_{min} + \delta' \\
+s' \leq w_{max} - \delta' \\
+s' < (w_{min} + w_{max})/2 \rightarrow PumpsControlledOn \\
+s' \geq (w_{min} + w_{max})/2 \rightarrow PumpsControlledOff \\
+v' = closed \land a' = on \\
+z' = broken
+\end{schema}
+
+Complete Operation
+
+\begin{zed}
+ControlNormal1 \defs SNormalFill1 \\
+\lor SNormalContinue1 \\
+\lor SNormalNotFill1 \\
+\lor SNormalWaterStop1 \\
+\lor SNormalControlStop1 \\
+\lor SNormalBroken1
+\end{zed}
+
+Operations for Broken State
+
+\begin{schema}{SBrokenContinue1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+AmountComputation 
+\where
+z = broken \\
+k_{w} = broken \\
+k_{d} = works \\
+s' = s + amount -d? \\
+\delta' = \delta + \delta_{pumps} + \delta_{d} \\
+s' \geq w_{min} + \delta' \\
+s' \leq w_{max} - \delta' \\
+s' < (w_{min} + w+{max})/2 \rightarrow PumpsControlledOn \\
+s' \geq (w_{min} + w_{max})/2 \rightarrow PumpsControlledOff \\
+v' = closed \land a' = on \\
+z' = broken
+\end{schema}
+
+\begin{schema}{SBrokenNormal1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+AmountComputation
+\where
+z = broken \\
+k_{w} = works \\
+w? \geq w_{min} \\
+w? \leq w_{max} \\
+w? < (w_{min} + w_{max})/2 \rightarrow PumpsControlledOn \\
+w? \geq (w_{min} + w_{max})/2 \rightarrow PumpsControlledOff \\
+s' = w? \\
+v' = closed \land a' = on \\
+z' = norm 
+\end{schema}
+
+\begin{schema}{SBrokenControlStop1}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput
+\where
+\ = broken \\
+k_{w} = broken \\
+k_{d} = broken \\
+a' = off \land z' = stop
+\end{schema}
+
+\begin{schema}{SBrokenWaterStop}
+\Delta SteamBoiler1 \\
+Input \\
+ControlInput \\
+AmountComputation 
+\where
+z = broken \lor z = norm \\
+k_{w} = broken \\
+k_{d} works \\
+s' = s+ amount - d? \\
+z = broken \rightarrow \delta' = \delta + \delta_{pumps} + \delta_{d} \\
+z = norm \rightarrow \delta' = \delta+{pumps} + \delta_{d} \\
+s' < w_{min} + \delta' \lor s' > w_{max} - d' \\
+a' = off \land z' = stop 
+\end{schema}
+
+\begin{zed}
+ControlBroken1 \defs SBrokenContinue1 \\
+\lor SBrokenNormal1 \\
+\lor SBrokenControlStop1 \\
+\lor SBrokenWaterStop
+\end{zed}
+
+\end{document}

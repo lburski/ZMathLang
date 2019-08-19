@@ -1,0 +1,101 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{enumerate}
+\item The mode-control panel contains four buttons for selecting modes and three displays for
+dialling in or displaying values. The system supports the following four modes:
+
+\begin{itemize}
+\item attitude control wheel steering (att\_cws)
+\item flight path angle selected (fpa\_sel)
+\item altitude engage (alt\_eng)
+\item calibrated air speed (cas\_eng)
+\end{itemize}
+
+\begin{zed}
+\set{events} ::= \term{press\_att\_cws} |  \term{press\_cas\_eng} | \term{press\_alt\_eng} | \\
+ \term{press\_fpa\_sel}
+\end{zed}
+
+Only one of the first three modes can be engaged at any time. However, the cas\_eng mode
+can be engaged at the same time as any of the other modes. The pilot engages a mode by pressing
+the corresponding button on the panel. One of the three modes, att\_cws, fpa\_sel, or alz\_eng,
+should be engaged at all times. Engaging any of the first three modes will automatically cause the
+other two to be disengaged since only one of these three modes can be engaged at a time.
+
+\begin{zed}
+\set{mode\_status} ::= \term{off} | \term{engaged}
+\end{zed}
+
+\begin{schema}{off\_eng}
+\text{\declaration{\term{mode}: \expression{mode\_status}}}
+\where
+\text{\expression{\expression{\term{mode} = \term{off}} \lor \expression{\term{mode} = \term{engaged}}}}
+\end{schema}
+
+
+\begin{schema}{AutoPilot}
+\text{\declaration{\term{att\_cws}: \expression{mode\_status}}} \\
+\text{\declaration{\term{fpa\_sel}: \expression{mode\_status}}} \\
+\text{\declaration{\term{alt\_eng}: \expression{mode\_status}}} \\
+\text{\declaration{\term{cas\_eng}: \expression{mode\_status}}} 
+\end{schema}
+
+\begin{schema}{AutoPilot'}
+\text{\declaration{\term{att\_cws'}: \expression{mode\_status}}} \\
+\text{\declaration{\term{fpa\_sel'}: \expression{mode\_status}}} \\
+\text{\declaration{\term{alt\_eng'}: \expression{mode\_status}}} \\
+\text{\declaration{\term{cas\_eng'}: \expression{mode\_status}}} 
+\end{schema}
+
+
+
+\begin{schema}{att\_cwsDo}
+\text{\Delta AutoPilot }
+\where
+\text{\expression{\term{att\_cws} = \term{off}}}\\
+\text{\expression{\term{att\_cws'} = \term{engaged}}} \\
+\text{\expression{\term{fpa\_sel'} = \term{off}}} \\
+\text{\expression{\term{alt\_eng'} = \term{off}}} \\
+\text{\expression{\expression{\term{cas\_eng'} = \term{off}} \lor
+ \expression{\term{cas\_eng'} = \term{engaged}}}}
+\end{schema}
+
+
+\item There are three displays on the panel: and altitude [ALT], flight path angle [FPA], and
+calibrated air speed [CAS]. The displays usually show the current values for the altitude, flight
+path angle, and air speed of the aircraft. However, the pilot can enter a new value into a display by
+dialling in the value using the knob next to the display. This is the target or "pre-selected" value that
+the pilot wishes the aircraft to attain. For example, if the pilot wishes to climb to 25,000 feet, he 
+will dial 25,000 into the altitude display window and then press the alz\_eng button to engage the 
+altitude mode. Once the target value is achieved or the mode is disengaged, the display reverts to 
+showing the "current" value.
+
+\item If the pilot dials in an altitude that is more than 1,200 feet above the current altitude and
+then presses the alz\_eng button, the altitude mode will not directly engage. Instead, the altitude
+engage mode will change to "armed" and the flight-path angle select mode is engaged. The pilot
+must then dial in a flight-path angle for the flight-control system to follow until the aircraft attains 
+the desired altitude. The flight-path angle select mode will remain engaged until the aircraft is within
+ 1,200 feet of the desired altitude, then the altitude engage mode is automatically engaged.
+
+\item The calibrated air speed and the flight-path angle values need not be pre-selected before the
+corresponding modes are engaged--the current values displayed will be used. The pilot can dial-in
+a different target value after the mode is engaged. However, the altitude must be pre-selected
+before the altitude engage button is pressed. Otherwise, the command is ignored.
+
+\item The calibrated air speed and flight-path angle buttons toggle on and off every time they are
+pressed. For example, if the calibrated air speed button is pressed while the system is already in
+calibrated air speed mode that mode will be disengaged. However, if the attitude control wheel
+steering button is pressed while the attitude control wheel steering mode is already engaged, the
+button is ignored. Likewise, pressing the altitude engage button while the system is already in
+altitude engage mode has no effect.
+
+Because of space limitations, only the mode-control panel interface itself will be modelled in this
+example. The specification will only include a simple set of commands the pilot can enter plus the 
+functionality needed to support modes switching and displays.The actual commands that would
+be transmitted to the flight-control computer to maintain modes,etc., are not modelled.
+
+\end{enumerate}
+\end{document}

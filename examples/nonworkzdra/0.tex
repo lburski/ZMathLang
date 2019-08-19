@@ -1,0 +1,140 @@
+
+\documentclass{article}
+\usepackage{zed}
+\begin{document}
+
+\begin{zed}
+[NAME] 
+\end{zed}
+
+\begin{zed}
+[SURNAME]
+\end{zed}
+
+\begin{zed}
+[TELEPHONE]
+\end{zed}
+
+\begin{schema}{TelephoneDirectory}
+persons: NAME \fun SURNAME \\ 
+phoneNumbers: NAME \pfun TELEPHONE
+\where 
+\dom phoneNumbers = \dom persons
+\end{schema}
+
+\begin{schema}{InitTelephoneDirectory} 
+TelephoneDirectory'
+\where 
+phoneNumbers' = \{\} \\
+persons' = \{\}
+\end{schema}
+
+\begin{schema}{AddPerson}
+\Delta TelephoneDirectory \\
+name?: NAME \\
+surname?: SURNAME \\
+phone?: TELEPHONE
+\where
+name? \mapsto surname? \notin persons\\
+persons' = persons \cup \{name? \mapsto surname?\}
+\end{schema}
+
+\begin{schema}{AddNumber}
+\Delta TelephoneDirectory \\
+n?: NAME \\
+s?: SURNAME \\
+p?: TELEPHONE
+\where
+n? \mapsto s? \in persons \\
+p? \notin \ran phoneNumbers \\
+phoneNumbers' = phoneNumbers \cup \{name? \mapsto phone?\}
+\end{schema}
+
+\begin{schema}{RemovePerson}
+\Delta TelephoneDirectory \\
+n?: NAME \\
+s?: SURNAME \\
+p?: TELEPHONE
+\where
+n? \mapsto s? \in persons\\
+n? \mapsto p? \notin phoneNumbers \\
+persons' = persons \setminus \{n? \mapsto s?\}
+\end{schema}
+
+\begin{schema}{RemoveNumber}
+\Delta TelephoneDirectory \\
+p?: TELEPHONE
+\where
+p? \in \ran phoneNumbers \\
+\exists m:\dom persons @ \\
+m \mapsto p? \in phoneNumbers \land \\
+phoneNumbers' = phoneNumbers \setminus \{m \mapsto p?\} \\
+\end{schema}
+
+\begin{zed}
+OUTPUT ::= success | alreadyInDirectory | nameNotInDirectory | \\
+numberInUse | numberDoesntExist
+\end{zed}
+
+\begin{schema}{Success}
+message!: OUTPUT \\
+\where
+message! = success
+\end{schema}
+
+\begin{schema}{AlreadyInDirectory}
+\Xi TelephoneDirectory \\
+message!: OUTPUT \\
+n?: NAME \\
+s?: SURNAME
+\where
+n? \mapsto s? \in persons \\
+message! = alreadyInDirectory
+\end{schema}
+
+\begin{schema}{NameNotInDirectory}
+\Xi TelephoneDirectory \\
+message!: OUTPUT \\
+n?: NAME \\
+s?: SURNAME
+\where
+n? \mapsto s? \notin persons \\
+message! = nameNotInDirectory
+\end{schema}
+
+\begin{schema}{NumberInUse}
+message!: OUTPUT \\
+p?: TELEPHONE
+\where
+p? \in  \ran phoneNumbers \\
+message! = numberInUse
+\end{schema}
+
+\begin{schema}{NumberDoesntExist}
+message!: OUTPUT \\
+p?: TELEPHONE
+\where
+p? \notin \ran phoneNumbers \\
+message! = numberDoesntExist
+\end{schema}
+
+\begin{zed}
+TotalAddPerson \defs (AddPerson \land Success) \lor AlreadyInDirectory \\
+TotalRemovePerson \defs (RemovePerson \land Success) \\
+ \lor NameNotInDirectory \\
+TotalAddNumber \defs (AddNumber \land Success) \\
+ \lor NameNotInDirectory \lor NumberInUse \\
+TotalRemoveNumber \defs (RemoveNumber \land Success)  \\
+\lor NumberDoesntExist \lor NameNotInDirectory \\
+\end{zed}
+
+
+\begin{zed}
+TotalPhone \defs TotalAddPerson \lor TotalRemovePerson \\ \lor TotalAddNumber \lor TotalRemoveNumber
+\end{zed}
+
+\begin{zed}
+TotalPhoneAndTotalAddPerson \defs TotalPhone \lor TotalAddPerson
+\end{zed}
+
+\end{document}

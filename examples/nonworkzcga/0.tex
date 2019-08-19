@@ -1,0 +1,104 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{zed}
+[NAME] 
+\end{zed}
+
+\begin{zed}
+[SURNAME]
+\end{zed}
+
+\begin{schema}{TelephoneDirectory}
+persons: NAME \fun SURNAME \\ 
+phoneNumbers: NAME \pfun TELEPHONE
+\where 
+\dom phoneNumbers=\dom persons
+\end{schema}
+
+\begin{schema}{InitTelephoneDirectory} 
+TelephoneDirectory' 
+\where 
+phoneNumbers' = \{\} \\
+persons' = \{\}
+\end{schema}
+
+\begin{schema}{AddPerson}
+TheTelephoneDirectory \\
+name?: NAME \\
+surname?: SURNAME \\
+\where
+name? \mapsto surname? \notin persons\\
+persons' = persons \cup \{name? \mapsto surname? \}
+\end{schema}
+
+\begin{schema}{AddNumber}
+\Delta TelephoneDirectory \\
+n?: NAME \\
+s?: SURNAME \\
+p?: TELEPHONE
+\where
+n \mapsto s \in persons\\
+p? \notin \ran phoneNumbers \\
+phoneNumbers' = phoneNumbers \cup \{n \mapsto phone?\}
+\end{schema}
+
+\begin{schema}{RemovePerson}
+\Delta TelephoneDirectory \\
+n?: NAME \\
+s?: SURNAME \\
+p?: TELEPHONE
+\where
+n? \mapsto s? \in persons\\
+n? \mapsto p? \notin phoneNumbers \\
+persons' = persons \setminus \{n? \mapsto s?\}
+\end{schema}
+
+\begin{zed}
+OUTPUT ::= success | alreadyInDirectory | nameNotInDirectory | numberInUse
+\end{zed}
+
+\begin{schema}{Success}
+message!:OUTPUT
+\where
+message! = success
+\end{schema}
+
+\begin{schema}{AlreadyInDirectory}
+message!:OUTPUT \\
+n?: NAME \\
+s?: SURNAME
+\where
+n? \mapsto s \in person \\
+message! = alreadyInDirectory
+\end{schema}
+
+\begin{schema}{NameNotInDirectory}
+message!:OUTPUT \\
+n?: NAME \\
+s?: SURNAME
+\where
+n? \mapsto s? \notin persons \\
+message! = NotInDirectory
+\end{schema}
+
+\begin{schema}{NumberInUse}
+message!:OUTPUT \\
+p?: TELEPHONE
+\where
+p? \in \ran phoneNumbers \\
+message! = numberInUse
+\end{schema}
+
+\begin{zed}
+TotalAddPerson \defs (AddPerson \land Success) 
+\lor AlreadyInDirectory \\
+TotalRemovePerson \defs (RemovePerson \land Success)
+ \lor NameNotInDirectory \\
+TotalAddNumber \defs (AddNumber \land Success) 
+\lor NameNotInDirectory \lor NumberInUse \\
+\end{zed}
+
+\end{document}

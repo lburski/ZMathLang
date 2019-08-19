@@ -1,0 +1,134 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\dratheory{T1}{0.5}{
+\begin{zed}
+price:\nat
+\end{zed}
+
+\draschema{SS1}{
+\begin{schema}{VMSTATE}
+stock, takings: \nat
+\end{schema}}
+
+\draschema{CS0}{
+\begin{schema}{VM\_operation}
+\Delta VMSTATE \\
+cash\_tendered?, cash\_refunded!: \nat \\
+bars\_delivered! : \nat
+\end{schema}}
+
+\uses{CS0}{SS1}
+
+\draschema{PRE1}{
+\begin{schema}{exact\_cash}
+cash\_tendered?: \nat
+\where
+cash\_tendered? = price
+\end{schema}}
+
+\draschema{PRE2}{
+\begin{schema}{insufficient\_cash}
+cash\_tendered? : \nat
+\where
+cash\_tendered? < price
+\end{schema}}
+
+\draschema{PRE3}{
+\begin{schema}{some\_stock}
+stock: \nat
+\where
+stock > 0
+\end{schema}}
+
+\draschema{CS1}{
+\begin{schema}{VM\_sale}
+VM\_operation
+\where
+\draline{PO1}{stock' = stock -1 \\
+bars\_delivered! = 1 \\
+cash\_refunded! = cash\_tendered? - price \\
+takings' = takings + price}
+\end{schema}}
+
+
+\uses{CS1}{CS0}
+\requires{CS1}{PO1}
+
+\draschema{CS2}{
+\begin{schema}{VM\_nosale}
+VM\_operation
+\where
+\draline{PO2}{stock' = stock \\
+bars\_delivered! = 0 \\
+cash\_refunded! = cash\_tendered?\\
+takings' = takings}
+\end{schema}}
+
+\uses{CS2}{CS0}
+\requires{CS2}{PO2}
+
+\draschema{TS1}{
+\begin{zed}
+VM1 \defs exact\_cash \land some\_stock \land VM\_sale
+\end{zed}}
+
+\uses{TS1}{PRE1}
+\uses{TS1}{PRE3}
+\uses{TS1}{CS1}
+
+\draschema{TS2}{
+\begin{zed}
+VM2 \defs insufficient\_cash \land VM\_nosale
+\end{zed}}
+
+\uses{TS2}{PRE2}
+\uses{TS2}{CS2}
+
+\draschema{TS3}{
+\begin{zed}
+VM3 \defs VM1 \lor VM2
+\end{zed}}
+\totalises{TS3}{TS1}
+\totalises{TS3}{TS2}
+}
+
+
+\begin{tabular}{|l|}
+\hline
+\textbf{Assigned rhetorical roles}\\
+\hline
+(T1, hasRhetoricalRole, theory) \\
+(SS1, hasRhetoricalRole, stateschema) \\
+(CS0, hasRhetoricalRole, changeschema) \\
+(CS1, hasRhetoricalRole, changeschema) \\
+(CS2, hasRhetoricalRole, changeschema) \\
+(PRE1, hasRhetoricalRole, precondition) \\
+(PRE2, hasRhetoricalRole, precondition) \\
+(PRE3, hasRhetoricalRole, precondition) \\
+(PO1, hasRhetoricalRole, postcondition) \\
+(PO2, hasRhetoricalRole, postcondition) \\
+(TS1, hasRhetoricalRole, totalise) \\
+(TS2, hasRhetoricalRole, totalise) \\
+(TS3, hasRhetoricalRole, totalise) \\
+\hline
+\hline
+\textbf{Relations}\\
+\hline
+(CS0, uses, SS1)\\
+(CS1, uses, CS0)\\
+(CS2, uses, CS)\\
+(PRE1, allows, PO1)\\
+(PRE3, allows, PO1)\\
+(PRE2, allows, PO2)\\
+TS1, totalises, PRE1 \\
+TS2, totalises, PRE2 \\
+TS1, totalises, PRE3 \\
+TS3, totalises, TS1 \\
+TS3, totalises, TS2 \\
+\hline
+\end{tabular}
+
+\end{document}

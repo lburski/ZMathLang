@@ -1,0 +1,513 @@
+\documentclass{article}
+\usepackage{zmathlang}
+
+\begin{document}
+
+\begin{zed}
+\set{State} ::= \term{init} | \term{norm} | \term{broken} | \term{stop}
+\end{zed}
+
+\begin{zed}
+\set{OnOff} ::= \term{on} |\term{off}
+\end{zed}
+
+\begin{zed}
+\set{OpenClosed} ::= \term{open} | \term{closed}
+\end{zed}
+
+Physical Constants
+
+\begin{axdef}
+\text{\declaration{\term{w_{min}}: \expression{\nat}}} \\
+\text{\declaration{\term{w_{max}}: \expression{\nat}}} \\
+\text{\declaration{\term{l}: \expression{\nat}}} \\
+\text{\declaration{\term{d_{max}}: \expression{\nat}}} \\
+\text{\declaration{\term{\delta_{p}}: \expression{\nat}}} \\
+\text{\declaration{\term{\delta_{d}}: \expression{\nat}}} \\
+\where
+\text{\expression{\term{w_{min}} < \term{w_{max}}}}
+\end{axdef}
+
+Measured values
+
+\begin{schema}{Input}
+\text{\declaration{\term{w?}: \expression{\nat}}} \\
+\text{\declaration{\term{d?}: \expression{\nat}}}
+\end{schema}
+
+Control values
+
+\begin{schema}{Pumps}
+\text{\declaration{\term{p_{1}}, \term{p_{2}}, \term{p_{3}}, \term{p_{4}}: \expression{OnOff}}}
+\end{schema}
+
+\begin{schema}{SteamBoiler0}
+\text{Pumps} \\
+\text{\declaration{\term{v}: \expression{OpenClosed}}} \\
+\text{\declaration{\term{a}: \expression{OnOff}}} \\
+\text{\declaration{\term{z}: \expression{State}}}
+\end{schema}
+
+Auxiliary Schemata
+
+\begin{schema}{PumpsOff}
+\text{Pumps'}
+\where
+\text{\expression{\expression{\term{p_{1}} = \term{off}} \land \expression{\term{p_{2}'} = \term{off}} \land \expression{\term{p_{3}'} = \term{off}} \land \expression{\term{p_{4}'} = \term{off}}}}
+\end{schema}
+
+\begin{schema}{PumpsOn}
+\text{Pumps'}
+\where
+\text{\expression{\expression{\term{p_{1}} = \term{on}} \land \expression{\term{p_{2}'} = \term{on}} \land \expression{\term{p_{3}'} = \term{on}} \land \expression{\term{p_{4}'} = \term{on}}}}
+\end{schema}
+
+Steam Boiler Initial State
+
+\begin{schema}{SteamBoilerInit0}
+\text{SteamBoiler0'}
+\where
+\text{\expression{\term{a'}= \term{off}}} \\
+\text{\expression{\term{z'} = \term{init}}}
+\end{schema}
+
+Operations for Initialisation
+
+\begin{schema}{SInitNormal0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\term{w?} \geq \term{\term{w_{min}} + \term{d_{max}}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{max}}}} \\
+\text{\expression{\text{PumpsOff}}} \\
+\text{\expression{\term{z'} = \term{norm}}} \\
+\text{\expression{\term{v'} = \term{closed}}} \\
+\text{\expression{\term{a'} = \term{on}}}
+\end{schema}
+
+\begin{schema}{SInitStop0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} > \term{0}}} \\
+\text{\expression{\term{z'} = \term{stop}}}
+\end{schema}
+
+\begin{schema}{SInitFill0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\term{w?} < \term{\term{w_{min}} + \term{d_{max}}}}} \\
+\text{\expression{\text{PumpsOn}}} \\
+\text{\expression{\term{z'} = \term{z}}} \\
+\text{\expression{\term{v'} = \term{closed}}} \\
+\text{\expression{\term{a'} = \term{off}}}
+\end{schema}
+
+\begin{schema}{SInitEmpty0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\term{w?} > \term{w_{max}}}} \\
+\text{\expression{\text{PumpsOff}}} \\
+\text{\expression{\term{z'} = \term{z}}} \\
+\text{\expression{\term{v'} = \term{open}}} \\
+\text{\expression{\term{a'} = \term{off}}}
+\end{schema}
+
+\begin{zed}
+ControlInit0 \defs \text{\expression{\text{SInitNormal0} \\
+\lor \text{SInitStop0} \\
+\lor \text{SInitFill0} \\
+\lor \text{SInitEmpty0}}}
+\end{zed}
+
+Operations for Normal State
+
+\begin{schema}{SNormalFill0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{w?} \geq \term{w_{min}}}} \\
+\text{\expression{\term{w?} \leq \term{\term{w_{opt}} -\term{\term{3}\term{l}}}}} \\
+\text{\expression{\text{PumpsOn}}} \\
+\text{{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}} \land \expression{\term{z'} = \term{z}}}}
+\end{schema}
+
+Note: Simplified version where all four pumps are swicthed on simultaneously.
+
+\begin{schema}{SNormalContinue0}
+\text{\Xi SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{w?} > \term{\term{w_{opt}} - \term{\term{3}\term{l}}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{opt}}}}
+\end{schema}
+
+\begin{schema}{SNormalNotFill0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{w?} > \term{w_{opt}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{max}}}} \\
+\text{\expression{\text{PumpsOff}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}} \land \expression{\term{z'} = \term{z}}}}
+\end{schema}
+
+\begin{schema}{SNormalStop0}
+\text{\Delta SteamBoiler0} \\
+\text{Input}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\expression{\term{w?} < \term{w_{min}}} \lor \expression{\term{w?} > \term{w_{max}}}}} \\
+\text{\expression{\expression{\term{a'} = \term{off}} \land \expression{\term{z'} = \term{stop}}}}
+\end{schema}
+
+\begin{zed}
+ControlNormal0 \defs \text{\expression{\text{SNormalFill0} \\
+ \lor \text{SNormalContinue0} \\
+  \lor \text{SNormalNotFill0}\\
+  \lor \text{SNormalStop0}}}
+\end{zed}
+
+\begin{zed}
+Control0 \defs \text{\expression{ \text{ControlInit0} \\
+ \lor \text{ControlNormal0}}}
+\end{zed}
+
+Extended Solution
+
+Additional Type
+
+\begin{zed}
+\set{WorksBroken} ::= \term{works} | \term{broken}
+\end{zed}
+
+Additional measured values
+
+\begin{schema}{ControlInput}
+\text{\declaration{\term{k_{w}?}: \expression{WorksBroken}}} \\
+\text{\declaration{\term{k_{d}?}: \expression{WorksBroken}}} \\
+\text{\declaration{\term{k_{p1}?}: \expression{WorksBroken}}} \\
+\text{\declaration{\term{k_{p2}?}: \expression{WorksBroken}}} \\
+\text{\declaration{\term{k_{p3}?}: \expression{WorksBroken}}} \\
+\text{\declaration{\term{k_{p4}?}: \expression{WorksBroken}}} \\
+\end{schema}
+
+Control values
+
+\begin{schema}{SteamBoiler1}
+\text{SteamBoiler0} \\
+\text{\declaration{\term{s}: \expression{\nat}}} \\
+\text{\declaration{\term{\delta}: \expression{\nat}}}
+\end{schema}
+
+Initial State
+
+\begin{schema}{SteamBoilerInit1}
+\text{SteamBoiler1' }
+\where
+\text{\expression{\term{a'} = \term{off}}} \\
+\text{\expression{\term{z'} = \term{init}}}
+\end{schema}
+
+Auxiliary Functions
+
+\begin{axdef}
+\text{\definition{\declaration{\term{pswitch}: \expression{(OnOff \times WorksBroken) \fun OnOff}}}}
+\where
+\text{\expression{\term{\term{pswitch}(\term{on}, \term{works})} = \term{on}}} \\
+\text{\expression{\term{\term{pswitch}(\term{on}, \term{broken})} = \term{off}}} \\ 
+\text{\expression{\term{\term{pswitch}(\term{off}, \term{works})} = \term{off}}} \\
+\text{\expression{\term{\term{pswitch}(\term{off},\term{broken})} = \term{off}}}
+\end{axdef}
+
+\begin{axdef}
+\text{\definition{\declaration{\term{pamount}: \expression{(OnOff \times WorksBroken) \fun \nat}}}}
+\where
+\text{\expression{\forall \declaration{\term{x}: \expression{OnOff}}, \declaration{\term{y}: \expression{WorksBroken}} \\
+ | \expression{\expression{\expression{\term{x} = \term{off}} \lor \expression{\term{y} = \term{broken}}} @ \\
+\expression{\term{\term{pamount}(\term{x}, \term{y})} = \term{0} }}}}\\
+\text{\expression{\term{\term{pamount}(\term{on}, \term{works})} = \term{1}}}
+\end{axdef}
+
+Auxilary Schemata
+
+\begin{schema}{PumpsControlledOn}
+\text{Pumps'} \\
+\text{ControlInput}
+\where
+\text{\expression{\expression{\term{p_{1}'} = \term{\term{pswitch}(\term{on}, \term{k_{p1}?})}} \land
+ \expression{\term{p_{2}'} = \term{\term{pswitch}(\term{on},\term{k_{p2}?})}}}} \\
+\text{\expression{\expression{\term{p_{2}'} = \term{\term{pswitch}(\term{on}, \term{k_{p3}?})}} \land
+ \expression{\term{p_{4}'} = \term{\term{pswitch}(\term{on},\term{k_{p4}?})}}}}
+\end{schema}
+
+\begin{schema}{PumpsControlledOff}
+\text{Pumps'} \\
+\text{ControlInput}
+\where
+\text{\expression{\expression{\term{p_{1}'} = \term{\term{pswitch}(\term{off}, \term{k_{p1}?})}}
+ \land \expression{\term{p_{2}'} = \term{\term{pswitch}(\term{off},\term{k_{p2}?})}}}} \\
+\text{\expression{\expression{\term{p_{2}'} = \term{\term{pswitch}(\term{off}, \term{k_{p3}?})}}
+ \land \expression{\term{p_{4}'} = \term{\term{pswitch}(\term{off},\term{k_{p4}?})}}}}
+\end{schema}
+
+Operations for Initialisation
+
+\begin{schema}{SInitNormal1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\expression{\term{k_{w}} = \term{works}} \land \expression{\term{k_{d}} = \term{works}}}} \\
+\text{\expression{\term{w?} \geq \term{\term{w_{min}} + \term{d_{max}}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{max}}}} \\
+\text{\expression{\term{z'} = \term{norm}}} \\
+\text{\expression{\term{v'} = \term{closed}}} \\
+\text{\expression{\term{a'} = \term{on}}} \\
+\text{\expression{\term{s'} = \term{w?}}} \\
+\text{\expression{\text{PumpsOff}}}
+\end{schema}
+
+\begin{schema}{SInitFill1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\expression{\term{k_{w}} = \term{works}} \land \expression{\term{k_{d}} = \term{works}}}} \\
+\text{\expression{\term{w?} < \term{\term{w_{min}} + \term{d_{max}}}}} \\
+\text{\expression{\term{z'} = \term{z}}} \\
+\text{\expression{\term{v'} = \term{closed}}} \\
+\text{\expression{\term{a'} = \term{off}}} \\
+\text{\expression{\text{PumpsOn}}}
+\end{schema}
+
+\begin{schema}{SInitEmpty1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\term{d?} = \term{0}}} \\
+\text{\expression{\term{w?} > \term{w_{max}}}} \\
+\text{\expression{\term{z'} = \term{z}}} \\
+\text{\expression{\term{v'} = \term{open}}} \\
+\text{\expression{\term{a'} = \term{off}}} \\
+\text{\expression{\text{PumpsOff}}}
+\end{schema}
+
+\begin{schema}{SInitStop1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{init}}} \\
+\text{\expression{\expression{\term{d?} > \term{0}} \lor \expression{\term{k_{w}} = \term{broken}}
+ \lor \expression{\term{k_{d}} = \term{broken}}}} \\
+\text{\expression{\term{z'} = \term{stop}}}
+\end{schema}
+
+\begin{zed}
+ControlInit1 \defs \text{\expression{\text{SInitNormal1} \\
+\lor \text{SInitFill1} \\
+\lor \text{SInitEmpty1} \\
+\lor \text{SInitStop1}}}
+\end{zed}
+
+Operations for Normal State
+
+\begin{schema}{SNormalFill1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{k_{w}} = \term{works}}} \\
+\text{\expression{\term{w?} \geq \term{w_{min}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{opt}} - \term{\term{3}\term{l}}}} \\
+\text{\expression{\term{s'} = \term{w?}}} \\
+\text{\expression{\text{PumpsControlledOn}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}} \land \expression{\term{z'} = \term{z}}}}
+\end{schema}
+
+\begin{schema}{SNormalContinue1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{k_{w}} = \term{works}}} \\
+\text{\expression{\term{w?} > \term{\term{w_{opt}} - \term{\term{3}\term{l}}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{opt}}}} \\
+\text{\expression{\expression{\term{p_{1}'} = \term{\term{pswitch}(\term{p_{1}}, \term{k_{p1}})}} \land \expression{\term{p_{2}'} = \term{\term{pswitch}(\term{p_{2}}, \term{k_{p2}})}}}} \\
+\text{\expression{\expression{\term{p_{3}'} = \term{\term{pswitch}(\term{p_{3}}, \term{k_{p3}})}} \land \expression{\term{p_{4}'} = \term{\term{pswitch}(\term{p_{4}}, \term{k_{p4}})}}}} \\
+\text{\expression{\term{s'} = \term{w?}}} \\
+\text{\expression{\expression{\term{v'} = \term{v}} \land \expression{\term{a'} = \term{a}} \land \expression{\term{z'} = \term{z}}}}
+\end{schema}
+
+\begin{schema}{SNormalNotFill1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{k_{w}} = \term{works}}} \\
+\text{\expression{\term{w?} > \term{w_{opt}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{max}}}} \\
+\text{\expression{\term{s'} = \term{w?}}} \\
+\text{\expression{\text{PumpsControlledOff}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}} \land \expression{\term{z'} = \term{z}}}}
+\end{schema}
+
+\begin{schema}{SNormalWaterStop1}
+\Delta SteamBoiler \\
+Input \\
+ControlInput 
+\where
+\expression{\expression{\term{z} = \term{norm}} \lor \expression{\term{z} = \term{broken}}} \\
+\expression{\term{k_{w}} = \term{works}} \\
+\expression{\expression{\term{w?} < \term{w_{min}}} \lor \expression{\term{w?} > \term{w_{max}}}} \\
+\expression{\expression{\term{a'} = \term{off}} \land \expression{\term{z'} = \term{stop}}}
+\end{schema}
+
+\begin{schema}{SNormalControlStop1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\expression{\term{k_{w}} = \term{broken}} \land \expression{\term{k_{d}} = \term{broken}}}} \\
+\text{\expression{\expression{\term{a'} = \term{off}} \land \expression{\term{z'} = \term{stop}}}}
+\end{schema}
+
+\begin{schema}{AmountComputation}
+\text{SteamBoiler1} \\
+\text{ControlInput} \\
+\text{\declaration{\term{amount}: \expression{\nat}}} \\
+\text{\declaration{\term{\delta_{pumps}}: \expression{\nat}}}
+\where
+\text{\expression{\term{amount} = \\
+\term{\term{l} * (\term{\term{\term{pamount}(\term{p_{1}}, \term{k_{p1}?})} + \term{\term{pamount}(\term{p_{2}}, \term{k_{p2}?})} +  \\
+\term{\term{pamount}(\term{p_{3}}, \term{k_{p3}?})} + \term{\term{pamount}(\term{p_{4}}, \term{k_{p4}?})}})}}} \\
+\text{\expression{\term{\delta_{pumps}} = \\
+\term{\term{\delta_{p}} * (\term{\term{\term{pamount}(\term{p_{1}}, \term{works})} +  \term{(\term{\term{pamount}(\term{p_{2}}},  \term{works})} + \\ \term{(\term{pamount}(\term{p_{3}}, \term{works})} + \term{(\term{pamount}(\term{p_{4}}, \term{works})}})}}}
+\end{schema}
+
+\begin{schema}{SNormalBroken1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\text{AmountComputation} \\
+\where
+\text{\expression{\term{z} = \term{norm}}} \\
+\text{\expression{\term{k_{w}} = \term{broken}}} \\
+\text{\expression{\term{k_{d}} = \term{works}}} \\
+\text{\expression{\term{s'} = \term{\term{s}+ \term{amount} -\term{d?}}}} \\
+\text{\expression{\term{\delta'} = \term{\term{\delta_{pumps}} + \term{\delta_{d}}}}} \\
+\text{\expression{\term{s'} \geq \term{\term{w_{min}} + \term{\delta'}}}} \\
+\text{\expression{\term{s'} \leq \term{\term{w_{max}} - \term{\delta'}}}} \\
+\text{\expression{\expression{\term{s'} < \term{(\term{\term{w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOn}}}} \\
+\text{\expression{\expression{\term{s'} \geq \term{(\term{\term{w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOff}}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}}}} \\
+\text{\expression{\term{z'} = \term{broken}}}
+\end{schema}
+
+Complete Operation
+
+\begin{zed}
+ControlNormal1 \defs \text{\expression{\text{SNormalFill1} \\
+\lor \text{SNormalContinue1} \\
+\lor \text{SNormalNotFill1} \\
+\lor \text{SNormalWaterStop1} \\
+\lor \text{SNormalControlStop1} \\
+\lor \text{SNormalBroken1}}}
+\end{zed}
+
+Operations for Broken State
+
+\begin{schema}{SBrokenContinue1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\text{AmountComputation}
+\where
+\text{\expression{\term{z} = \term{broken}}} \\
+\text{\expression{\term{k_{w}} = \term{broken}}} \\
+\text{\expression{\term{k_{d}} = \term{works}}} \\
+\text{\expression{\term{s'} = \term{\term{s} + \term{amount} -\term{d?}}}} \\
+\text{\expression{\term{\delta'} = \term{\term{\delta} + \term{\delta_{pumps}} + \term{\delta_{d}}}}} \\
+\text{\expression{\term{s'} \geq \term{\term{w_{min}} + \term{\delta'}}}} \\
+\text{\expression{\term{s'} \leq \term{\term{w_{max}} - \term{\delta'}}}} \\
+\text{\expression{\expression{\term{s'} < \term{(\term{\term{w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOn}}}} \\
+\text{\expression{\expression{\term{s'} \geq \term{(\term{\term{w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOff}}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}}}} \\
+\text{\expression{\term{z'} = \term{broken}}}
+\end{schema}
+
+\begin{schema}{SBrokenNormal1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\text{AmountComputation}
+\where
+\text{\expression{\term{z} = \term{broken}}} \\
+\text{\expression{\term{k_{w}} = \term{works}}} \\
+\text{\expression{\term{w?} \geq \term{w_{min}}}} \\
+\text{\expression{\term{w?} \leq \term{w_{max}}}} \\
+\text{\expression{\expression{\term{w?} < \term{(\term{\term{w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOn}}}} \\
+\text{\expression{\expression{\term{w?} \geq \term{\term{\term{(w_{min}} + \term{w_{max}}})/\term{2}}} \rightarrow \expression{\text{PumpsControlledOff}}}} \\
+\text{\expression{\term{s'} = \term{w?}}} \\
+\text{\expression{\expression{\term{v'} = \term{closed}} \land \expression{\term{a'} = \term{on}}}} \\
+\text{\expression{\term{z'} = \term{norm}}}
+\end{schema}
+
+\begin{schema}{SBrokenControlStop1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput}
+\where
+\text{\expression{\term{z} = \term{broken}}} \\
+\text{\expression{\term{k_{w}} = \term{broken}}} \\
+\text{\expression{\term{k_{d}} = \term{broken}}} \\
+\text{\expression{\expression{\term{a'} = \term{off}} \land \expression{\term{z'} = \term{stop}}}}
+\end{schema}
+
+\begin{schema}{SBrokenWaterStop1}
+\text{\Delta SteamBoiler1} \\
+\text{Input} \\
+\text{ControlInput} \\
+\text{AmountComputation} 
+\where
+\text{\expression{\expression{\term{z} = \term{broken}} \lor \expression{\term{z} = \term{norm}}}} \\
+\text{\expression{\term{k_{w}} = \term{broken}}} \\
+\text{\expression{\term{k_{d}} = \term{works}}} \\
+\text{\expression{\term{s'} = \term{\term{s} + \term{amount} - \term{d?}}}} \\
+\text{\expression{\expression{\term{z} = \term{broken}} \rightarrow \expression{\term{\delta'} = \term{\term{\delta} + \term{\delta_{pumps}} + \term{\delta_{d}}}}}} \\
+\text{\expression{\expression{\term{z} = \term{norm}} \rightarrow \expression{\term{\delta'} = \term{\term{\delta_{pumps}} + \term{\delta_{d}}}}}} \\
+\text{\expression{\expression{\term{s'} < \term{\term{w_{min}} + \term{\delta'}}} \lor \expression{\term{s'} > \term{\term{w_{max}} - \term{\delta'}}}}} \\
+\text{\expression{\expression{\term{a'} = \term{off}} \land \expression{\term{z'} = \term{stop}}}}
+\end{schema}
+
+\begin{zed}
+ControlBroken1 \defs \text{\expression{\text{SBrokenContinue1} \\
+\lor \text{SBrokenNormal1} \\
+\lor \text{SBrokenControlStop1} \\
+\lor \text{SBrokenWaterStop1}}}
+\end{zed}
+
+\end{document}

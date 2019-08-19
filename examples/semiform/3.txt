@@ -1,0 +1,14 @@
+stateSchema SS1 
+
+outputSchema OS1 
+
+output O1 
+
+stateSchema SS2 
+
+changeSchema CS1 
+
+precondition PRE1 
+
+postcondition PO1 
+
