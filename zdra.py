@@ -1779,20 +1779,11 @@ class fillIn:
     
 x = fillIn()
 
-#TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_clubstate2.tex")
-#TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_clubstate2.thy")
-
-#TheLabeledSpec= ("/home/jeff/lavinias_workspace/zdra/fullexample.tex")
-#TheIsaSkel = ("/home/jeff/lavinias_workspace/zdra/gpsafullexample.thy")
-
-#TheLabeledSpec= ("/home/lb89/workspace/zdra/curries/zml_videoshop.tex")
-#TheIsaSkel = ("/home/lb89/workspace/zdra/curries/gpsazml_videoshop.thy")
-
-TheLabeledSpec= ("1n2.tex")
-TheIsaSkel = ("gpsa1n2.thy")
 
 ##########
 ##Create IsaSkeleton to use without interface
+#TheLabeledSpec= ("labeledspec.tex")
+#TheIsaSkel = ("gpsa.thy")
 #zdracheck.totalcheck(TheLabeledSpec)
 #zdracheck.createskeleton_set()
 #createIsaskel(TheLabeledSpec)
@@ -1812,9 +1803,9 @@ def createSkeleton():
 def fillinskeleton():
     x.fillinIsa(TheLabeledSpec, TheIsaSkel)
     #x.fillinIsa(TheLabeledSpec, TheIsaSkel)
-    #x.fillNames(TheIsaSkel)
+    x.fillNames(TheIsaSkel)
     
 #createSkeleton()
 #fillinskeleton()
 
-x.findVariablesAndTypes(TheLabeledSpec)
+#x.findVariablesAndTypes(TheLabeledSpec)

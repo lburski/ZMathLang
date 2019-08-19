@@ -330,9 +330,9 @@ def findskeleton(somestring):
 #somedoc = "fullexample.tex"
 #somedoc = "text.tex"
 
-somedoc= ("/home/lb89/workspace/zdra/1n2.tex")
-totalcheck(somedoc)
-creatdepgraphplot(somedoc)
+#somedoc= ("/home/lb89/workspace/zdra/1n2.tex")
+#totalcheck(somedoc)
+#creatdepgraphplot(somedoc)
 #createplot(somedoc)
 #print creatname(somedoc)
 #print createskeleton_set()

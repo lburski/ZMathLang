@@ -93,7 +93,7 @@ class Example(Frame):
         #zdraMenu.add_command(label = "Totalise Spec", command=self.totalisespec)
         zdraMenu.add_command(label = "ZDRa PDF", command=self.zdraPdfCheck)
         gpsaMenu.add_command(label = "Proof Skeleton", command=self.createskeleton)
-        gpsaMenu.add_command(label = "ProofPower-Z Skeleton", command=self.createppgpsa)
+        #gpsaMenu.add_command(label = "ProofPower-Z Skeleton", command=self.createppgpsa)
         gpsaMenu.add_command(label = "Isabelle Skeleton", command=self.createIsaPS)
         gpsaMenu.add_command(label = "FillInIsaSkeleton", command=self.fillInIsa)
         menubar.add_cascade(label="File", menu=fileMenu)
